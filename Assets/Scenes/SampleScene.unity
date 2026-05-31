@@ -132,7 +132,7 @@ GameObject:
   - component: {fileID: 83980597}
   - component: {fileID: 83980595}
   m_Layer: 5
-  m_Name: Host IP Input
+  m_Name: Host Code Input
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -256,7 +256,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -285.6, y: 253.5}
+  m_AnchoredPosition: {x: -235.2, y: 253.51}
   m_SizeDelta: {x: 306.4313, y: 45.8088}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &83980597
@@ -1214,8 +1214,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   hostButton: {fileID: 125362615}
   clientButton: {fileID: 263550517}
-  ipInputField: {fileID: 83980595}
-  localIPDisplay: {fileID: 1731515872}
+  codeInputField: {fileID: 83980595}
+  yourCodeDisplay: {fileID: 1731515872}
   unityTransportPort: 7777
 --- !u!114 &447558400
 MonoBehaviour:
@@ -1849,7 +1849,7 @@ GameObject:
   - component: {fileID: 1177400709}
   - component: {fileID: 1177400708}
   m_Layer: 5
-  m_Name: Host IP Label
+  m_Name: Host Code Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1894,7 +1894,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Host IP:'
+  m_text: 'Host code:'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1960,7 +1960,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 0, z: -47.28578, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -2695,7 +2695,7 @@ GameObject:
   - component: {fileID: 1731515873}
   - component: {fileID: 1731515872}
   m_Layer: 5
-  m_Name: Your IP
+  m_Name: Your Code
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2721,7 +2721,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Your IP:'
+  m_text: 'Your code:'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2787,7 +2787,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: -180.92517, w: 0}
+  m_margin: {x: 0, y: 0, z: -300.149, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0

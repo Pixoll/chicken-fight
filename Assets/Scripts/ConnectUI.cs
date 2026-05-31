@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -5,17 +6,23 @@ using TMPro;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class ConnectUI : MonoBehaviour {
     [SerializeField] private Button hostButton;
     [SerializeField] private Button clientButton;
-    [SerializeField] private TMP_InputField ipInputField;
-    [SerializeField] private TMP_Text localIPDisplay;
+
+    [FormerlySerializedAs("ipInputField")] [SerializeField]
+    private TMP_InputField codeInputField;
+
+    [FormerlySerializedAs("localIPDisplay")] [SerializeField]
+    private TMP_Text yourCodeDisplay;
+
     [SerializeField] private ushort unityTransportPort;
 
     private void Start() {
-        localIPDisplay.text = "Your IP: " + GetLocalIPv4();
+        yourCodeDisplay.text = "Your code: " + IpToBase64(GetLocalIPv4());
 
         hostButton.onClick.AddListener(HostButtonOnClick);
         clientButton.onClick.AddListener(ClientButtonOnClick);
@@ -30,7 +37,8 @@ public class ConnectUI : MonoBehaviour {
 
     private void ClientButtonOnClick() {
         var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-        transport.SetConnectionData(ipInputField.text.Trim(), unityTransportPort);
+        string ip = Base64ToIp(codeInputField.text.Trim());
+        transport.SetConnectionData(ip, unityTransportPort);
         Debug.Log($"[Connect] Client dialling {transport.ConnectionData.Address}:{transport.ConnectionData.Port}");
         NetworkManager.Singleton.StartClient();
     }
@@ -46,4 +54,10 @@ public class ConnectUI : MonoBehaviour {
             .Select(a => a.Address.ToString())
             .FirstOrDefault() ?? "Not found";
     }
+
+    private string IpToBase64(string ip) =>
+        Convert.ToBase64String(ip.Split('.').Select(byte.Parse).ToArray()).TrimEnd('=');
+
+    private string Base64ToIp(string base64) =>
+        string.Join('.', Convert.FromBase64String(base64.PadRight((base64.Length + 3) / 4 * 4, '=')));
 }
