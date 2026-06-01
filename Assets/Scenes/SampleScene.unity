@@ -832,6 +832,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   moveSpeed: 5
   startingDirection: 0
+  animator: {fileID: 0}
 --- !u!114 &317830505
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2451,7 +2452,7 @@ Transform:
   m_GameObject: {fileID: 1405752336}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: -1.99, y: 0.82, z: 0}
+  m_LocalPosition: {x: -0.01, y: 2.58, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2777,7 +2778,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!70 &1629240151
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -3509,12 +3510,20 @@ PrefabInstance:
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
       value: 2669424413
       objectReference: {fileID: 0}
+    - target: {fileID: 129690632711318918, guid: cb11075771d3f257c95843e540570d94, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3754967063009869723, guid: cb11075771d3f257c95843e540570d94, type: 3}
       propertyPath: m_Name
       value: Chicken
       objectReference: {fileID: 0}
     - target: {fileID: 3754967063009869723, guid: cb11075771d3f257c95843e540570d94, type: 3}
       propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7154399592728372333, guid: cb11075771d3f257c95843e540570d94, type: 3}
+      propertyPath: m_FlipX
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8497045173777138829, guid: cb11075771d3f257c95843e540570d94, type: 3}

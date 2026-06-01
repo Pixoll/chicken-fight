@@ -34,7 +34,7 @@ public class PlayerAttack : MonoBehaviour {
     private void OnDisable() => _inputActions.Player.Attack.Disable();
 
     private void Update() {
-        if (WantsToAttack() && !_isAttacking) {
+        if (_inputActions.Player.Attack.WasPressedThisFrame() && !_isAttacking) {
             TriggerAttack();
         }
     }

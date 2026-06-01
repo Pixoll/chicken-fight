@@ -564,6 +564,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   moveSpeed: 5
   startingDirection: 0
+  animator: {fileID: 8283809575884451575}
 --- !u!70 &6645630032649567125
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -811,8 +812,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4238527689723937363}
-  - component: {fileID: 129690632711318918}
-  - component: {fileID: 6178188565350215866}
+  - component: {fileID: 8283809575884451575}
+  - component: {fileID: 6534957784818349836}
+  - component: {fileID: 645941056440231368}
   m_Layer: 0
   m_Name: Skin
   m_TagString: Untagged
@@ -835,7 +837,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 9128688241462965565}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &129690632711318918
+--- !u!95 &8283809575884451575
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9118514628053111143}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 667fda18c65ed749b854b2e33541335f, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!212 &6534957784818349836
 SpriteRenderer:
   serializedVersion: 2
   m_ObjectHideFlags: 0
@@ -894,7 +918,7 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!114 &6178188565350215866
+--- !u!114 &645941056440231368
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -903,40 +927,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 9118514628053111143}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e6251639c21e889459a24f55a8b255d3, type: 3}
+  m_Script: {fileID: 11500000, guid: 3c469357d0fa4e608b0b74938d83eb58, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MyScripts.SpriteAnimator
-  idleFrames:
-  - {fileID: 1554669544101352617, guid: 10168017b411db64cb26abf7170cf275, type: 3}
-  runFrames:
-  - {fileID: -2840872067067070418, guid: 96e01651a6b4d3d409ed4c5ebcf35db3, type: 3}
-  - {fileID: 7129972365468719607, guid: bf1cbb7d1b7014a439320985c456d57c, type: 3}
-  - {fileID: 2235774501500668123, guid: 3c3e0151ba86cf24f990b7a8ddaa548a, type: 3}
-  - {fileID: 2520514845102630843, guid: b499eab94fba9d14ca72d34fce223c73, type: 3}
-  - {fileID: 6331511874539590047, guid: c3ddbdfc2e8b7154c89efcf056169314, type: 3}
-  - {fileID: 2013371401932595206, guid: b0ebca670b5e2df499ba23da243fc42c, type: 3}
-  - {fileID: 617299601370609323, guid: c5082508a61c9df4e90ef5a30768a375, type: 3}
-  - {fileID: 4529489558821456997, guid: e95198ab1a22e81469830f960de51d3e, type: 3}
-  - {fileID: 2036127235203735302, guid: 862473cd10ada1543b0a88c54287df1d, type: 3}
-  - {fileID: 5869623021186727797, guid: b36ff2cb29f153a4dba283b52bb42b85, type: 3}
-  - {fileID: -2307798106085473192, guid: 4c578e9314a35594c9c08f836c956515, type: 3}
-  - {fileID: -4043332887625560178, guid: 2d392f9325b5dc84e81f1b8aa552ffba, type: 3}
-  - {fileID: -3595015571746935561, guid: 766ae9a7447d89f4a92664352d1d13ea, type: 3}
-  - {fileID: 2411148199434941042, guid: 566ec29b8395a74438f1b1c8203c8a40, type: 3}
-  - {fileID: -6760203293791750252, guid: 5f40c62b1cac78e45a5811f4b88fd40c, type: 3}
-  - {fileID: -549996560743274965, guid: dcfd7d4d03fbd0748a479df5c570b148, type: 3}
-  - {fileID: -2669699239358252906, guid: 16d9fb28432964f4297cb106e1b8aef0, type: 3}
-  - {fileID: 4180804253415662758, guid: 2857f53c78e1ca94a9e64ee1d396cfb4, type: 3}
-  - {fileID: -1699152472434152865, guid: e6ca85731186e72478f7d7c06a5e7c39, type: 3}
-  - {fileID: -2754196050668747329, guid: 29ec7326d228c944e9dfcf3c2084da8b, type: 3}
-  - {fileID: -1350537109656504707, guid: e9ca8c4e5d616be4ba9f893f876cb639, type: 3}
-  - {fileID: -1083650946761324590, guid: 14ef2393eb95b40458dfc668bbe31937, type: 3}
-  - {fileID: -7165307311537490649, guid: ff6987f719ae7fa4a8108bc4d8f60eb0, type: 3}
-  - {fileID: 796392111795685359, guid: a2afc2e8a62e38f4ea641e9670e70674, type: 3}
-  - {fileID: 2593559901938118815, guid: c16b2b8272899fb43bdf79b2dd8c459b, type: 3}
-  - {fileID: -5866655090823596707, guid: e8a4768c089f81c48b1647f6d2635b65, type: 3}
-  - {fileID: -241019563917786001, guid: 5b62d0c2db1abdd46ad2d2d637cfc56f, type: 3}
-  - {fileID: 3292280649809878341, guid: a379c0e923c32774fb0c5f3664e34ee5, type: 3}
-  - {fileID: 3167421175040167054, guid: 12ae7fd5b80a89349862b9a7bb279a9b, type: 3}
-  - {fileID: 653825414906945541, guid: 2bb8acf183f2e39449bee6b578597292, type: 3}
-  animationFps: 60
+  m_EditorClassIdentifier: Assembly-CSharp::ClientNetworkAnimator
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkAnimatorExpanded: 0
+  AuthorityMode: 0
+  m_Animator: {fileID: 8283809575884451575}
+  TransitionStateInfoList: []
+  AnimatorParameterEntries:
+    ParameterEntries:
+    - name: isRunning
+      NameHash: 1239866031
+      Synchronize: 1
+      ParameterType: 4
+  AnimatorParametersExpanded: 0
