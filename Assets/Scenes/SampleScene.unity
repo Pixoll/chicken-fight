@@ -904,6 +904,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 402d15ab76ec30941b0299a661124174, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyScripts.ChildHitbox
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!58 &322543761
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -1150,6 +1151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 402d15ab76ec30941b0299a661124174, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyScripts.ChildHitbox
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &427868752
 GameObject:
   m_ObjectHideFlags: 0
@@ -1196,6 +1198,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 402d15ab76ec30941b0299a661124174, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyScripts.ChildHitbox
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!58 &427868755
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -2874,6 +2877,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16ac0de3d73b8ed4c93f7753caba9d46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyScripts.HitReceiver
+  ShowTopMostFoldoutHeaderGroup: 1
   knockbackForce: 50
   resetDelay: 3
 --- !u!1 &1731515871
@@ -3513,6 +3517,10 @@ PrefabInstance:
     - target: {fileID: 129690632711318918, guid: cb11075771d3f257c95843e540570d94, type: 3}
       propertyPath: m_Enabled
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 933449467955450645, guid: cb11075771d3f257c95843e540570d94, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3754967063009869723, guid: cb11075771d3f257c95843e540570d94, type: 3}
       propertyPath: m_Name

@@ -1,6 +1,7 @@
+using Unity.Netcode;
 using UnityEngine;
 
-public class ChildHitbox : MonoBehaviour {
+public class ChildHitbox : NetworkBehaviour {
     private HitReceiver _parentReceiver;
 
     private void Awake() {
@@ -8,11 +9,9 @@ public class ChildHitbox : MonoBehaviour {
     }
 
     private void OnTriggerEnter2D(Collider2D collision) {
-        if (collision.gameObject.name == "AttackHitbox") {
-            if (_parentReceiver != null) {
-                Vector2 attackerCenter = collision.transform.parent.position;
-                _parentReceiver.ReceiveHit(attackerCenter);
-            }
-        }
+        if (_parentReceiver == null || collision.gameObject.name != "AttackHitbox") return;
+
+        Vector2 attackerCenter = collision.transform.parent.position;
+        _parentReceiver.ReceiveHit(attackerCenter);
     }
 }

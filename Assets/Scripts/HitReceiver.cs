@@ -1,7 +1,8 @@
 using System.Collections;
+using Unity.Netcode;
 using UnityEngine;
 
-public class HitReceiver : MonoBehaviour {
+public class HitReceiver : NetworkBehaviour {
     [Header("Configuración de Impacto")] [SerializeField]
     private float knockbackForce = 15f;
 
@@ -19,6 +20,16 @@ public class HitReceiver : MonoBehaviour {
     }
 
     public void ReceiveHit(Vector2 attackerPosition) {
+        ReceiveHitServerRpc(attackerPosition);
+    }
+
+    [Rpc(SendTo.Server)]
+    private void ReceiveHitServerRpc(Vector2 attackerPosition) {
+        ApplyHitClientRpc(attackerPosition);
+    }
+
+    [Rpc(SendTo.Everyone)]
+    private void ApplyHitClientRpc(Vector2 attackerPosition) {
         if (_rb == null) return;
 
         Vector2 pushDirection = ((Vector2)transform.position - attackerPosition).normalized;

@@ -1,11 +1,12 @@
 using System;
 using System.Collections;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
-public class PlayerAttack : MonoBehaviour {
+public class PlayerAttack : NetworkBehaviour {
     [Header("Configuración del Ataque")] [SerializeField]
     private GameObject attackArea;
 
@@ -22,7 +23,7 @@ public class PlayerAttack : MonoBehaviour {
         _inputActions = new PlayerInputActions();
     }
 
-    private void Start() {
+    public override void OnNetworkSpawn() {
         GameObject inputAttackArea = GameObject.FindWithTag("AttackArea");
 
         if (inputAttackArea != null) {
@@ -34,7 +35,9 @@ public class PlayerAttack : MonoBehaviour {
     private void OnDisable() => _inputActions.Player.Attack.Disable();
 
     private void Update() {
-        if (_inputActions.Player.Attack.WasPressedThisFrame() && !_isAttacking) {
+        if (!IsOwner) return;
+
+        if (WantsToAttack() && !_isAttacking) {
             TriggerAttack();
         }
     }

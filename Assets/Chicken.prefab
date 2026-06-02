@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 858540232939629512}
   - component: {fileID: 6873675973353511529}
   - component: {fileID: 9133624692510487167}
+  - component: {fileID: 8015133903617329028}
   m_Layer: 6
   m_Name: Torso
   m_TagString: Untagged
@@ -128,6 +129,19 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.5
+--- !u!114 &8015133903617329028
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 768854168697852422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 402d15ab76ec30941b0299a661124174, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChildHitbox
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &933449467955450645
 GameObject:
   m_ObjectHideFlags: 0
@@ -139,6 +153,7 @@ GameObject:
   - component: {fileID: 7184422066985157611}
   - component: {fileID: 990948393955290950}
   - component: {fileID: 2741170753969862902}
+  - component: {fileID: 1453042537837532408}
   m_Layer: 6
   m_Name: Legs
   m_TagString: Untagged
@@ -266,6 +281,19 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &1453042537837532408
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 933449467955450645}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 402d15ab76ec30941b0299a661124174, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChildHitbox
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &1341180797794426518
 GameObject:
   m_ObjectHideFlags: 0
@@ -453,6 +481,7 @@ GameObject:
   - component: {fileID: 6192680949230399452}
   - component: {fileID: 6244409911246320361}
   - component: {fileID: 7142864836590416428}
+  - component: {fileID: 7140345275030098163}
   m_Layer: 0
   m_Name: Chicken
   m_TagString: Untagged
@@ -627,6 +656,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e550304456f87fa42ace0b465625119e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyScripts.PlayerAttack
+  ShowTopMostFoldoutHeaderGroup: 1
   attackArea: {fileID: 3366715745168587373}
   attackDuration: 0.1
 --- !u!114 &7142864836590416428
@@ -675,6 +705,21 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!114 &7140345275030098163
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3754967063009869723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16ac0de3d73b8ed4c93f7753caba9d46, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitReceiver
+  ShowTopMostFoldoutHeaderGroup: 1
+  knockbackForce: 15
+  resetDelay: 3
 --- !u!1 &8239110391834338254
 GameObject:
   m_ObjectHideFlags: 0
@@ -686,6 +731,7 @@ GameObject:
   - component: {fileID: 6741619114828450329}
   - component: {fileID: 959362548740151504}
   - component: {fileID: 2126953433506111691}
+  - component: {fileID: 8368817181446061831}
   m_Layer: 6
   m_Name: Head
   m_TagString: Untagged
@@ -803,6 +849,19 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.49999997
+--- !u!114 &8368817181446061831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8239110391834338254}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 402d15ab76ec30941b0299a661124174, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChildHitbox
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &9118514628053111143
 GameObject:
   m_ObjectHideFlags: 0

@@ -20,13 +20,6 @@ public class PlayerMovement : NetworkBehaviour {
     private Joystick _joystick;
     private PlayerJump _playerJump;
 
-    // for later
-    private NetworkVariable<int> _health = new(
-        100,
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Owner
-    );
-
     private NetworkVariable<bool> _isFacingRight = new(
         false,
         NetworkVariableReadPermission.Everyone,
