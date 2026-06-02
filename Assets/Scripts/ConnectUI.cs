@@ -12,6 +12,9 @@ using UnityEngine.UI;
 public class ConnectUI : MonoBehaviour {
     [SerializeField] private Button hostButton;
     [SerializeField] private Button clientButton;
+    [SerializeField] private Button singleplayerButton;
+    [SerializeField] private GameObject inGameUI;
+    [SerializeField] private GameObject multiplayerMenu;
 
     [FormerlySerializedAs("ipInputField")] [SerializeField]
     private TMP_InputField codeInputField;
@@ -26,6 +29,7 @@ public class ConnectUI : MonoBehaviour {
 
         hostButton.onClick.AddListener(HostButtonOnClick);
         clientButton.onClick.AddListener(ClientButtonOnClick);
+        singleplayerButton.onClick.AddListener(HostButtonOnClick);
     }
 
     private void HostButtonOnClick() {
@@ -36,11 +40,29 @@ public class ConnectUI : MonoBehaviour {
     }
 
     private void ClientButtonOnClick() {
-        var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-        string ip = Base64ToIp(codeInputField.text.Trim());
-        transport.SetConnectionData(ip, unityTransportPort);
-        Debug.Log($"[Connect] Client dialling {transport.ConnectionData.Address}:{transport.ConnectionData.Port}");
-        NetworkManager.Singleton.StartClient();
+        if (string.IsNullOrWhiteSpace(codeInputField.text)) {
+            Debug.LogError("[Connect] Code input field is empty");
+            return;
+        }
+
+        try {
+            var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+            string ip = Base64ToIp(codeInputField.text.Trim());
+            transport.SetConnectionData(ip, unityTransportPort);
+            Debug.Log($"[Connect] Client dialling {transport.ConnectionData.Address}:{transport.ConnectionData.Port}");
+
+            if (!NetworkManager.Singleton.StartClient()) {
+                Debug.LogError("[Connect] Failed to connect");
+                return;
+            }
+
+            inGameUI.SetActive(true);
+            multiplayerMenu.SetActive(false);
+        } catch (FormatException ex) {
+            Debug.LogError($"[Connect] Invalid code format: {ex.Message}");
+        } catch (Exception ex) {
+            Debug.LogError($"[Connect] Failed to connect: {ex.Message}");
+        }
     }
 
     private string GetLocalIPv4() {
