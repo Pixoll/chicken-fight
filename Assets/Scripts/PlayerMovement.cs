@@ -44,14 +44,17 @@ public class PlayerMovement : NetworkBehaviour {
     private void OnDisable() => _inputActions.Player.Disable();
 
     private void Update() {
-        if (!IsOwner) return;
+        // Si somos el dueño, leemos el control local
+        if (IsOwner) {
+            _moveInput = _inputActions.Player.Move.ReadValue<Vector2>().normalized;
+            if (_moveInput == Vector2.zero) {
+                _moveInput = _joystick.Direction;
+            }
 
-        _moveInput = _inputActions.Player.Move.ReadValue<Vector2>().normalized;
-        if (_moveInput == Vector2.zero) {
-            _moveInput = _joystick.Direction;
+            FlipCharacter();
         }
 
-        FlipCharacter();
+        // ESTO LO EJECUTAN TODOS: Así el maniquí o clones pueden apagar su animación
         UpdateAnimationState();
     }
 
@@ -95,10 +98,24 @@ public class PlayerMovement : NetworkBehaviour {
     }
 
     private void UpdateAnimationState() {
-        bool isMovingHorizontally = Mathf.Abs(_moveInput.x) > 0.1f;
+        bool isMovingHorizontally;
 
+        if (IsOwner) {
+            // Si es nuestro propio personaje, dependemos ÚNICAMENTE del input del teclado/joystick.
+            // Si no tocamos nada (_moveInput.x == 0), se detiene de inmediato.
+            isMovingHorizontally = Mathf.Abs(_moveInput.x) > 0.01f;
+        } else {
+            // Si es el clon/maniquí visto desde otra pantalla, dependemos de su velocidad en red.
+            // Subimos el umbral a 0.2f para absorber cualquier imprecisión física o retraso de red.
+            isMovingHorizontally = Mathf.Abs(_rb.linearVelocity.x) > 0.2f;
+        }
+
+        // Verificamos si está tocando el suelo
         bool isGrounded = _playerJump && _playerJump.IsGrounded;
 
-        animator.SetBool(IsRunning, isMovingHorizontally && isGrounded);
+        if (animator != null) {
+            // Solo corre si hay movimiento real Y está en el suelo
+            animator.SetBool(IsRunning, isMovingHorizontally && isGrounded);
+        }
     }
 }
