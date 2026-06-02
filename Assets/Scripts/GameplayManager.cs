@@ -1,5 +1,3 @@
-using UnityEngine;
-
 using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -7,12 +5,12 @@ using UnityEngine;
 public class GameplayManager : NetworkBehaviour {
     public static GameplayManager Instance { get; private set; }
 
-    [Header("Configuración de la Partida")]
-    [SerializeField] private float matchDuration = 60f; // 1 minuto
+    [Header("Configuración de la Partida")] [SerializeField]
+    private float matchDuration = 60f; // 1 minuto
 
     // Variables de red optimizadas para que todos los clientes lean el tiempo
-    public NetworkVariable<float> timeRemaining = new NetworkVariable<float>(60f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-    public NetworkVariable<bool> isMatchOver = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<float> timeRemaining = new(60f);
+    public NetworkVariable<bool> isMatchOver = new();
 
     private void Awake() {
         if (Instance == null) Instance = this;
@@ -31,6 +29,7 @@ public class GameplayManager : NetworkBehaviour {
     private IEnumerator MatchTimerRoutine() {
         while (timeRemaining.Value > 0 && !isMatchOver.Value) {
             yield return new WaitForSeconds(1f);
+
             timeRemaining.Value -= 1f;
         }
 
@@ -45,7 +44,7 @@ public class GameplayManager : NetworkBehaviour {
 
         // Buscamos a todos los jugadores en la partida
         HitReceiver[] players = FindObjectsByType<HitReceiver>(FindObjectsSortMode.None);
-        
+
         HitReceiver playerDead = null;
         HitReceiver playerAlive = null;
 
@@ -60,9 +59,11 @@ public class GameplayManager : NetworkBehaviour {
         // Si alguien se quedó sin vida, termina el juego
         if (playerDead != null) {
             string victoryMessage = "¡PARTIDA TERMINADA!";
+
             if (players.Length > 1 && playerAlive != null) {
                 victoryMessage = $"¡JUGADOR {playerAlive.OwnerClientId + 1} GANA!";
             }
+
             EndMatch(victoryMessage);
         }
     }
@@ -70,7 +71,7 @@ public class GameplayManager : NetworkBehaviour {
     private void EndMatch(string message) {
         isMatchOver.Value = true;
         Debug.Log($"[GAME OVER] {message}");
-        
+
         // Aquí notificamos a la interfaz de todos los clientes mediante un RPC
         NotifyMatchEndClientRpc(message);
     }

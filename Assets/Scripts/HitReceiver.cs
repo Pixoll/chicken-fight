@@ -3,17 +3,18 @@ using Unity.Netcode;
 using UnityEngine;
 
 public class HitReceiver : NetworkBehaviour {
-    [Header("Configuración de Tipo de Objeto")]
-    [SerializeField] private bool isPlayer = false;
+    [Header("Configuración de Tipo de Objeto")] [SerializeField]
+    private bool isPlayer;
 
-    [Header("Configuración de Impacto")] 
-    [SerializeField] private float knockbackForceX = 18f;
+    [Header("Configuración de Impacto")] [SerializeField]
+    private float knockbackForceX = 18f;
+
     [SerializeField] private float knockbackForceY = 10f;
     [SerializeField] private float resetDelay = 3f;
 
     [Header("Estadísticas de Combate")]
     // La vida sincronizada automáticamente en red
-    public NetworkVariable<int> currentHealth = new NetworkVariable<int>(100, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> currentHealth = new(100);
 
     private Rigidbody2D _rb;
     private Vector3 _initialPosition;
@@ -29,7 +30,7 @@ public class HitReceiver : NetworkBehaviour {
     public void ReceiveHit(Vector2 attackerPosition) {
         // Bloquear golpes si la partida ya terminó
         if (GameplayManager.Instance != null && GameplayManager.Instance.isMatchOver.Value) return;
-        
+
         ReceiveHitServerRpc(attackerPosition);
     }
 
@@ -69,14 +70,17 @@ public class HitReceiver : NetworkBehaviour {
 
     private IEnumerator ResetPositionRoutine() {
         yield return new WaitForSeconds(resetDelay);
+
         if (_rb != null) {
             _rb.bodyType = RigidbodyType2D.Kinematic;
             _rb.linearVelocity = Vector2.zero;
             _rb.angularVelocity = 0f;
         }
+
         transform.position = _initialPosition;
         transform.rotation = _initialRotation;
         yield return new WaitForFixedUpdate();
+
         if (_rb != null) _rb.bodyType = RigidbodyType2D.Dynamic;
         _resetCoroutine = null;
     }

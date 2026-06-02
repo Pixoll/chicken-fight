@@ -843,8 +843,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitReceiver
   ShowTopMostFoldoutHeaderGroup: 1
-  knockbackForce: 15
+  isPlayer: 1
+  knockbackForceX: 18
+  knockbackForceY: 10
   resetDelay: 3
+  currentHealth:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 100
 --- !u!114 &1068151500703818327
 MonoBehaviour:
   m_ObjectHideFlags: 0
