@@ -3,122 +3,109 @@ using UnityEngine;
 
 namespace GameplayScripts
 {
-    public class PlayerMovement : NetworkBehaviour {
-        private static readonly int IsRunning = Animator.StringToHash("isRunning");
-
-        public enum StartingDirection {
-            Left,
-            Right
-        }
-
+    public class PlayerMovement : NetworkBehaviour 
+    {
+        [Header("Movement settings")]
         [SerializeField] private float moveSpeed = 5f;
-        [SerializeField] private StartingDirection startingDirection = StartingDirection.Left;
-        [SerializeField] private Animator animator;
 
         private Rigidbody2D _rb;
-        private PlayerInputActions _inputActions;
-        private Vector2 _moveInput;
-        private Vector3 _originalScale;
-        private Joystick _joystick;
-        private PlayerJump _playerJump;
+        private PlayerInputHandler _inputHandler;
+        private float _horizontalMove;
+        
+        private Vector3 _originalVisualScale;
+        private Vector3 _originalCombatScale;
+        
+        private Animator _animator;
+        private Transform _combatFolder;
 
-        private NetworkVariable<bool> _isFacingRight = new(
-            false,
-            NetworkVariableReadPermission.Everyone,
+        private readonly NetworkVariable<bool> _isFacingRight = new(
+            false, 
+            NetworkVariableReadPermission.Everyone, 
             NetworkVariableWritePermission.Owner
         );
 
-        private void Awake() {
-            _rb = GetComponent<Rigidbody2D>();
-            _inputActions = new PlayerInputActions();
-            _originalScale = transform.localScale;
-            _joystick = FindFirstObjectByType<Joystick>();
-            _playerJump = GetComponent<PlayerJump>();
-        }
+        private void Awake() 
+        {
+            _rb = GetComponentInParent<Rigidbody2D>();
+    
+            _inputHandler = transform.root.GetComponentInChildren<PlayerInputHandler>();
+            _animator = transform.root.GetComponentInChildren<Animator>();
+            
 
-        public override void OnNetworkSpawn() {
-            SetInitialOrientation();
-            _isFacingRight.OnValueChanged += UpdateOrientation;
-        }
+            var combatManager = transform.root.GetComponentInChildren<PlayerImpactsSection.PlayerImpactManager>();
+            _combatFolder = combatManager.transform;
 
-        private void OnEnable() => _inputActions.Player.Enable();
-
-        private void OnDisable() => _inputActions.Player.Disable();
-
-        private void Update() {
-            // Si somos el dueño, leemos el control local
-            if (IsOwner) {
-                _moveInput = _inputActions.Player.Move.ReadValue<Vector2>().normalized;
-                if (_moveInput == Vector2.zero) {
-                    _moveInput = _joystick.Direction;
-                }
-
-                FlipCharacter();
+            if (_animator != null)
+            {
+                _originalVisualScale = _animator.transform.localScale;
             }
 
-            // ESTO LO EJECUTAN TODOS: Así el maniquí o clones pueden apagar su animación
-            UpdateAnimationState();
+            if (_combatFolder != null)
+            {
+                _originalCombatScale = _combatFolder.localScale;
+            }
         }
 
-        private void FixedUpdate() {
+        private void UpdateSpriteScale(bool faceRight)
+        {
+            if (_animator)
+            {
+                _animator.transform.localScale = faceRight
+                    ? new Vector3(-_originalVisualScale.x, _originalVisualScale.y, _originalVisualScale.z)
+                    : _originalVisualScale;
+            }
+
+            if (_combatFolder)
+            {
+                _combatFolder.localScale = faceRight
+                    ? new Vector3(-_originalCombatScale.x, _originalCombatScale.y, _originalCombatScale.z)
+                    : _originalCombatScale;
+            }
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            _isFacingRight.OnValueChanged += OnOrientationChanged;
+            UpdateSpriteScale(_isFacingRight.Value);
+        }
+
+        private void Update() 
+        {
             if (!IsOwner) return;
 
-            _rb.linearVelocity = new Vector2(_moveInput.x * moveSpeed, _rb.linearVelocity.y);
+            _horizontalMove = _inputHandler.GetHorizontalInput();
+
+            HandleFlip();
+            UpdateAnimation();
         }
 
-        private void SetInitialOrientation() {
-            // if (startingDirection == StartingDirection.Right) {
-            //     transform.localScale = new Vector3(-_originalScale.x, _originalScale.y, _originalScale.z);
-            // } else {
-            //     transform.localScale = _originalScale;
-            // }
-            bool facingRight = startingDirection == StartingDirection.Right;
-            _isFacingRight.Value = facingRight;
-            UpdateOrientation(false, facingRight);
+        private void FixedUpdate() 
+        {
+            if (!IsOwner) return;
+
+            _rb.linearVelocity = new Vector2(_horizontalMove * moveSpeed, _rb.linearVelocity.y);
         }
 
-        private void FlipCharacter() {
-            // if (_moveInput.x > 0.1f) {
-            //     transform.localScale = new Vector3(-_originalScale.x, _originalScale.y, _originalScale.z);
-            // } else if (_moveInput.x < -0.1f) {
-            //     transform.localScale = _originalScale;
-            // }
-            bool shouldFaceRight = _moveInput.x > 0.1f;
-            bool shouldFaceLeft = _moveInput.x < -0.1f;
-
-            if (shouldFaceRight && !_isFacingRight.Value) {
+        private void HandleFlip()
+        {
+            if (_horizontalMove > 0f && !_isFacingRight.Value)
+            {
                 _isFacingRight.Value = true;
-            } else if (shouldFaceLeft && _isFacingRight.Value) {
+            }
+            else if (_horizontalMove < 0f && _isFacingRight.Value)
+            {
                 _isFacingRight.Value = false;
             }
         }
 
-        private void UpdateOrientation(bool previousValue, bool newValue) {
-            transform.localScale = newValue
-                ? new Vector3(-_originalScale.x, _originalScale.y, _originalScale.z)
-                : _originalScale;
+        private void UpdateAnimation()
+        {
+            if (!_animator) return;
+
+            bool isRunning = Mathf.Abs(_horizontalMove) > 0.05f;
+            _animator.SetBool("IsRunning", isRunning);
         }
 
-        private void UpdateAnimationState() {
-            bool isMovingHorizontally;
-
-            if (IsOwner) {
-                // Si es nuestro propio personaje, dependemos ÚNICAMENTE del input del teclado/joystick.
-                // Si no tocamos nada (_moveInput.x == 0), se detiene de inmediato.
-                isMovingHorizontally = Mathf.Abs(_moveInput.x) > 0.01f;
-            } else {
-                // Si es el clon/maniquí visto desde otra pantalla, dependemos de su velocidad en red.
-                // Subimos el umbral a 0.2f para absorber cualquier imprecisión física o retraso de red.
-                isMovingHorizontally = Mathf.Abs(_rb.linearVelocity.x) > 0.2f;
-            }
-
-            // Verificamos si está tocando el suelo
-            bool isGrounded = _playerJump && _playerJump.IsGrounded;
-
-            if (animator != null) {
-                // Solo corre si hay movimiento real Y está en el suelo
-                animator.SetBool(IsRunning, isMovingHorizontally && isGrounded);
-            }
-        }
+        private void OnOrientationChanged(bool previousValue, bool newValue) => UpdateSpriteScale(newValue);
     }
 }

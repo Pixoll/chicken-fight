@@ -1,47 +1,57 @@
-﻿using UnityEngine;
+﻿using Unity.Netcode;
+using UnityEngine;
 
 namespace GameplayScripts
 {
-    public class PlayerJump : MonoBehaviour {
+    public class PlayerJump : NetworkBehaviour 
+    {
+        [Header("Configuración del Salto")]
         [SerializeField] private float jumpForce = 5f;
 
+        [Header("Referencias de Colisión")]
+        [SerializeField] private Collider2D groundCheckCollider;
+
         private Rigidbody2D _rb;
-        private Collider2D _collider;
-        private PlayerInputActions _inputActions;
-        private Joystick _joystick;
+        private PlayerInputHandler _inputHandler;
 
         private int _groundLayerMask;
         private bool _isGrounded;
         private bool _jumpRequested;
 
-        private void Awake() {
-            _rb = GetComponent<Rigidbody2D>();
-            _collider = GetComponent<Collider2D>();
-            _joystick = FindFirstObjectByType<Joystick>();
-            _inputActions = new PlayerInputActions();
+        private void Awake() 
+        {
+            _rb = GetComponentInParent<Rigidbody2D>();
+    
+            _inputHandler = transform.root.GetComponentInChildren<PlayerInputHandler>();
             _groundLayerMask = LayerMask.GetMask("Ground");
         }
 
-        private void OnEnable() => _inputActions.Player.Jump.Enable();
-        private void OnDisable() => _inputActions.Player.Jump.Disable();
+        private void Update() 
+        {
+            if (!IsOwner) return;
 
-        private void Update() {
-            if (_inputActions.Player.Jump.WasPressedThisFrame() || _joystick.Direction.y >= .5f) {
+            if (_inputHandler.IsJumpPressedThisFrame()) 
+            {
                 _jumpRequested = true;
             }
         }
 
-        private void FixedUpdate() {
+        private void FixedUpdate() 
+        {
             CheckGroundedOverlap();
 
-            if (_jumpRequested) {
+            if (!IsOwner) return;
+
+            if (_jumpRequested) 
+            {
                 ExecuteJump();
                 _jumpRequested = false;
             }
         }
 
-        private void CheckGroundedOverlap() {
-            Bounds bounds = _collider.bounds;
+        private void CheckGroundedOverlap() 
+        {
+            Bounds bounds = groundCheckCollider.bounds;
             Vector2 overlapCenter = new Vector2(bounds.center.x, bounds.center.y - bounds.extents.y - 0.02f);
             Vector2 overlapSize = new Vector2(bounds.size.x * 0.9f, 0.05f);
 
@@ -49,8 +59,10 @@ namespace GameplayScripts
             _isGrounded = hit;
         }
 
-        private void ExecuteJump() {
-            if (_isGrounded) {
+        private void ExecuteJump() 
+        {
+            if (_isGrounded) 
+            {
                 _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, 0);
                 _rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
                 _isGrounded = false;
@@ -58,5 +70,11 @@ namespace GameplayScripts
         }
 
         public bool IsGrounded => _isGrounded;
+        
+        public void RequestJumpViaUI()
+        {
+            if (!IsOwner) return;
+            _jumpRequested = true;
+        }
     }
 }
