@@ -5,8 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace SingleplayerScripts
-{
+namespace SingleplayerScripts {
     public class FullscreenHotkeyHandler : MonoBehaviour {
         bool makeFullscreenAtStart = false;
 
@@ -25,8 +24,8 @@ namespace SingleplayerScripts
         }
     }
 
-// Below code from: https://gist.github.com/fnuecke/d4275087cc7969257eae0f939fac3d2f
-// My Improvement: Fixed bug where stuck in fullscreen after re-compiling
+    // Below code from: https://gist.github.com/fnuecke/d4275087cc7969257eae0f939fac3d2f
+    // My Improvement: Fixed bug where stuck in fullscreen after re-compiling
     public static class FullscreenGameView {
         private static readonly Type GameViewType = Type.GetType("UnityEditor.GameView,UnityEditor");
 
@@ -46,6 +45,7 @@ namespace SingleplayerScripts
 
         private static void OnBeforeAssemblyReload() {
             if (_instance == null) return;
+
             _instance.Close();
             _instance = null;
         }
@@ -78,6 +78,6 @@ namespace SingleplayerScripts
             _instance.Focus();
         }
     }
+}
 
 #endif
-}

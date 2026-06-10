@@ -1,12 +1,13 @@
+using MultiplayerScripts;
 using UnityEngine;
-using MultiplayerScripts; // Nos aseguramos de importar el namespace donde vive tu manager de red
 
-namespace MenuScripts
-{
-    public class MainMenuController : MonoBehaviour 
-    {
-        [Header("Menu Sections")]
-        [SerializeField] private GameObject mainSection;
+// Nos aseguramos de importar el namespace donde vive tu manager de red
+
+namespace MenuScripts {
+    public class MainMenuController : MonoBehaviour {
+        [Header("Menu Sections")] [SerializeField]
+        private GameObject mainSection;
+
         [SerializeField] private GameObject singleplayerSection;
         [SerializeField] private GameObject multiplayerSection;
         [SerializeField] private GameObject multiplayerOptionsSection;
@@ -24,7 +25,7 @@ namespace MenuScripts
             multiplayerSection.SetActive(false);
             preferencesSection.SetActive(false);
         }
-        
+
         public void OpenMultiplayerMenu() {
             mainSection.SetActive(false);
             singleplayerSection.SetActive(false);
@@ -40,17 +41,13 @@ namespace MenuScripts
             multiplayerJoinLobbySection.SetActive(false);
         }
 
-        
-        public void OpenMultiplayerLobbyMenu() 
-        {
+        public void OpenMultiplayerLobbyMenu() {
             Debug.Log("Abriendo Lobby .....");
-            if (GameplayNetworkManager.Instance != null)
-            {
+
+            if (GameplayNetworkManager.Instance != null) {
                 GameplayNetworkManager.Instance.CreateHost();
                 Debug.Log("Host creado");
-            }
-            else
-            {
+            } else {
                 Debug.LogError("[MainMenuController] No se encontró el GameplayNetworkManager en la escena.");
             }
 
@@ -59,11 +56,8 @@ namespace MenuScripts
             multiplayerJoinLobbySection.SetActive(false);
         }
 
-
-        public void CancelHostAndReturn()
-        {
-            if (GameplayNetworkManager.Instance != null)
-            {
+        public void CancelHostAndReturn() {
+            if (GameplayNetworkManager.Instance != null) {
                 GameplayNetworkManager.Instance.CloseHost();
                 Debug.Log("Host Cerrado");
             }
@@ -71,20 +65,19 @@ namespace MenuScripts
             OpenMultiplayerOptionsMenu();
         }
 
-
         public void OpenMultiplayerJoinLobbyMenu() {
             multiplayerOptionsSection.SetActive(false);
             multiplayerLobbySection.SetActive(false);
             multiplayerJoinLobbySection.SetActive(true);
         }
-        
+
         public void OpenPreferencesSection() {
             mainSection.SetActive(false);
             singleplayerSection.SetActive(false);
             multiplayerSection.SetActive(false);
             preferencesSection.SetActive(true);
         }
-        
+
         public void OpenMainmenuSection() {
             mainSection.SetActive(true);
             singleplayerSection.SetActive(false);

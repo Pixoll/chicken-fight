@@ -1,7 +1,6 @@
 using UnityEngine;
 
-namespace MenuScripts
-{
+namespace MenuScripts {
     public class QuitButton : MonoBehaviour {
         public void QuitGame() {
 #if UNITY_EDITOR

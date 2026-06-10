@@ -2,8 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem.Controls;
 using InputSystem = UnityEngine.InputSystem;
 
-namespace Unused
-{
+namespace Unused {
     public class Draggable : MonoBehaviour {
         private bool _dragging;
         private Vector3 _offset;

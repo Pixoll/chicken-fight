@@ -1,7 +1,6 @@
 using UnityEngine;
 
-namespace MenuScripts
-{
+namespace MenuScripts {
     public class GameManager : MonoBehaviour {
         [SerializeField] private int targetFrameRate = 60;
 
