@@ -93,5 +93,7 @@ namespace GameplayScripts {
         }
 
         private void OnOrientationChanged(bool previousValue, bool newValue) => UpdateSpriteScale(newValue);
+        
+        public bool IsFacingRight => _isFacingRight.Value;
     }
 }

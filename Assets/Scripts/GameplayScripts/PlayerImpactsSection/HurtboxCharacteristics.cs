@@ -1,28 +1,40 @@
 using UnityEngine;
 
-namespace GameplayScripts.PlayerImpactsSection {
-    public class HurtboxCharacteristics : MonoBehaviour {
-        public enum ImpactType {
+namespace GameplayScripts.PlayerImpactsSection
+{
+    public class HurtboxCharacteristics : MonoBehaviour
+    {
+        public enum ImpactType
+        {
             Punch,
             Environmental,
             StatusEffect,
             SpecialAttack
         }
+        public enum KnockbackDirection
+        {
+            Top,
+            Left,
+            Right,
+            TopLeft,
+            TopRight
+        }
 
-        [Header("Clasificación del Impacto")] [SerializeField]
-        private ImpactType impactType = ImpactType.Punch;
+        [Header("Impact Classification")]
+        [SerializeField] private ImpactType impactType;
 
-        [Header("Atributos del Daño")] [SerializeField]
-        private float damageAmount = 10f;
-
+        [Header("characteristics of the damage")]
+        [SerializeField] private float damageAmount = 10f;
+        [SerializeField] private float damageCooldown = 10f;
         [SerializeField] private float knockbackForce = 15f;
-
+        [SerializeField] private KnockbackDirection knockbackDirection;
+        
+        
+        
         public ImpactType Type => impactType;
         public float Damage => damageAmount;
+        public float Cooldwon => damageCooldown;
         public float Knockback => knockbackForce;
-
-        public Vector3 GetOriginPosition() {
-            return transform.position;
-        }
+        public KnockbackDirection Direction => knockbackDirection;
     }
 }
