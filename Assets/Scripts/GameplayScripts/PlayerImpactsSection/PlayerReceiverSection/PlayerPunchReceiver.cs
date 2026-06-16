@@ -1,20 +1,13 @@
+using Unity.Netcode;
 using UnityEngine;
 
 namespace GameplayScripts.PlayerImpactsSection.PlayerReceiverSection
 {
-    public class PlayerPunchReceiver : MonoBehaviour
+    // Script modular de red encargado EXCLUSIVAMENTE de las físicas de impacto
+    public class PlayerPunchReceiver : NetworkBehaviour 
     {
-        public enum PunchInclination
-        {
-            Top,
-            Mid,
-            Bottom
-        }
-
-        private PunchInclination _punchDirection;
-        private PlayerMovement _playerMovement;
-        
         private Rigidbody2D _rb;
+        private PlayerMovement _playerMovement;
         
         private void Awake()
         {
@@ -25,53 +18,55 @@ namespace GameplayScripts.PlayerImpactsSection.PlayerReceiverSection
             {
                 Debug.LogError("[PlayerPunchReceiver] ¡CRÍTICO: No se encontró Rigidbody2D en la raíz del personaje!");
             }
-            
-            if (_playerMovement == null)
-            {
-                Debug.LogError("[PlayerPunchReceiver] ¡CRÍTICO: No se encontró PlayerMovement en algun hijo!");
-            }
-            if (_playerMovement )
-            {
-                Debug.Log("[PlayerPunchReceiver] ¡CRÍTICO: Si se encontró PlayerMovement en algun hijo!");
-            }
         }
 
-        public void ApplyPunchKnockback(Vector3 attackerPosition, float force, PunchInclination inclination)
+        /// <summary>
+        /// Punto de entrada local llamado por el manager.
+        /// </summary>
+        public void EnviarImpactoFisicoALaRed(float force, HurtboxCharacteristics.KnockbackDirection direction, float durationStun)
         {
-            Vector2 pushVector = default;
-            
-            bool direction = _playerMovement.IsFacingRight;
-            Debug.Log("Esta mirando derecha?" + direction);
-            
-            switch (inclination)
+            // Enviamos el paquete de red optimizado con los datos justos
+            ProcesarFisicaDeGolpeRpc(force, direction, durationStun);
+        }
+
+        /// <summary>
+        /// RPC especializado que se ejecuta en todas las simulaciones de esta gallina por red.
+        /// </summary>
+        [Rpc(SendTo.Everyone)]
+        private void ProcesarFisicaDeGolpeRpc(float force, HurtboxCharacteristics.KnockbackDirection direction, float durationStun)
+        {
+            if (_rb == null) return;
+
+            // 1. Si viene tiempo de aturdimiento, inhabilitamos el movimiento de la gallina dueña
+            if (durationStun > 0f && _playerMovement != null)
             {
-                case PunchInclination.Top:
-                    pushVector = Vector2.up;
-                    break;
-
-                case PunchInclination.Mid:
-                    pushVector = Vector2.up;
-                    break;
-
-                case PunchInclination.Bottom:
-                    if (direction)
-                    {
-                        pushVector = Vector2.left;
-                        break;
-                    }
-                    pushVector = Vector2.right;
-                    break;
+                _playerMovement.StunningTime(durationStun);
+                Debug.Log($"<color=yellow>[STUN] Movimiento inhabilitado por {durationStun} segundos.</color>");
             }
 
-            _rb.linearVelocity = Vector2.zero;
+            // 2. Traducimos el Enum de dirección a vectores matemáticos 2D
+            Vector2 pushVector = GetVectorFromDirection(direction);
+            
+            // 3. Reseteamos la velocidad acumulada para que el golpe se sienta seco y potente
+            _rb.linearVelocity = Vector2.zero; 
 
+            // 4. Aplicamos el impulso físico
             _rb.AddForce(pushVector * force, ForceMode2D.Impulse);
 
-            Debug.Log($"<color=cyan>[PlayerPunchReceiver] Knockback aplicado. Dirección Enum: {inclination} | Vector Final: {pushVector} | Fuerza: {force}</color>");
+            Debug.Log($"<color=cyan>[PlayerPunchReceiver RPC] ¡Impacto procesado! Fuerza: {force} | Dirección: {direction}</color>");
         }
-        
-        public void ApplyPunchEffect()
+
+        private Vector2 GetVectorFromDirection(HurtboxCharacteristics.KnockbackDirection direction)
         {
+            return direction switch
+            {
+                HurtboxCharacteristics.KnockbackDirection.Top => Vector2.up,
+                HurtboxCharacteristics.KnockbackDirection.Left => Vector2.left,
+                HurtboxCharacteristics.KnockbackDirection.Right => Vector2.right,
+                HurtboxCharacteristics.KnockbackDirection.TopLeft => new Vector2(-1f, 1f).normalized,
+                HurtboxCharacteristics.KnockbackDirection.TopRight => new Vector2(1f, 1f).normalized,
+                _ => Vector2.zero
+            };
         }
     }
 }

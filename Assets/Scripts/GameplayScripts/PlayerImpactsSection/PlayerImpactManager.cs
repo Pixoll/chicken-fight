@@ -1,69 +1,45 @@
 using GameplayScripts.PlayerImpactsSection.PlayerReceiverSection;
-using Unity.Netcode;
 using UnityEngine;
 
 namespace GameplayScripts.PlayerImpactsSection
 {
-    public class PlayerImpactManager : NetworkBehaviour
+    // Distribuidor local en la pantalla del atacante
+    public class PlayerImpactManager : MonoBehaviour
     {
         private PlayerPunchReceiver _punchReceiver;
-        
 
         private void Awake()
         {
             _punchReceiver = GetComponentInChildren<PlayerPunchReceiver>();
         }
-        
+
+        /// <summary>
+        /// El detector de choques (Hitbox) llama a este método localmente.
+        /// </summary>
         public void ReceiveImpact(HurtboxCharacteristics characteristics)
         {
+            if (characteristics == null) return;
 
             switch (characteristics.Type)
             {
                 case HurtboxCharacteristics.ImpactType.Punch:
+                    
                     if (_punchReceiver != null)
                     {
-                        Vector2 originPosition = characteristics.transform.position;
+                        // Si la Hurtbox tiene activado el aturdimiento, mandamos su tiempo. Si no, mandamos 0.
+                        float tiempoAturdimiento = characteristics.Stunning ? characteristics.StunningTime : 0f;
 
-                        if (characteristics.Direction == HurtboxCharacteristics.KnockbackDirection.Top)
-                        {
-                            _punchReceiver.ApplyPunchKnockback(
-                                originPosition, 
-                                characteristics.Knockback, 
-                                PlayerPunchReceiver.PunchInclination.Top
-                            );
-                        }
-                        if (characteristics.Direction is HurtboxCharacteristics.KnockbackDirection.TopRight 
-                            or HurtboxCharacteristics.KnockbackDirection.TopLeft)
-                        {
-                            _punchReceiver.ApplyPunchKnockback(
-                                originPosition, 
-                                characteristics.Knockback, 
-                                PlayerPunchReceiver.PunchInclination.Mid
-                            );
-                        }
-                        
-                        if (characteristics.Direction is HurtboxCharacteristics.KnockbackDirection.Left 
-                        or  HurtboxCharacteristics.KnockbackDirection.Right)
-                        {
-                            _punchReceiver.ApplyPunchKnockback(
-                                originPosition, 
-                                characteristics.Knockback, 
-                                PlayerPunchReceiver.PunchInclination.Bottom
-                            );
-                        }
+                        // Le pasamos la pelota al receptor físico incluyendo el tiempo de Stun de la Hurtbox
+                        _punchReceiver.EnviarImpactoFisicoALaRed(
+                            characteristics.Knockback, 
+                            characteristics.Direction, 
+                            tiempoAturdimiento
+                        );
                     }
                     break;
 
                 case HurtboxCharacteristics.ImpactType.Environmental:
-                    Debug.Log($"<color=yellow>[ImpactManager] Aplicando efectos de entorno. Daño: {characteristics.Damage}</color>");
-                    break;
-
-                case HurtboxCharacteristics.ImpactType.StatusEffect:
-                    Debug.Log($"<color=cyan>[ImpactManager] Efecto de estado detectado. Ignorado temporalmente.</color>");
-                    break;
-
-                case HurtboxCharacteristics.ImpactType.SpecialAttack:
-                    Debug.Log($"<color=orange>[ImpactManager] Ataque especial detectado. Ignorado temporalmente.</color>");
+                    // Aquí irían las lógicas de trampas en el futuro
                     break;
             }
         }

@@ -1,7 +1,6 @@
 using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
-// Necesario para usar Corrutinas (IEnumerator)
 
 namespace GameplayScripts {
     public class PlayerPunch : NetworkBehaviour {

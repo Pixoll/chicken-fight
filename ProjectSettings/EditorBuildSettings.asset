@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/TrainMode.unity
     guid: cf3a7dd3d2071c24a9f236a0555ea617
+  - enabled: 1
+    path: Assets/Scenes/RoundMode.unity
+    guid: 9475d333318e61f47aa1e182cadad104
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
