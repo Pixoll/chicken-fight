@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace GameplayScripts.PlayerImpactsSection.PlayerReceiverSection
 {
-    // Script modular de red encargado EXCLUSIVAMENTE de las físicas de impacto
     public class PlayerPunchReceiver : NetworkBehaviour 
     {
         private Rigidbody2D _rb;
@@ -19,54 +18,48 @@ namespace GameplayScripts.PlayerImpactsSection.PlayerReceiverSection
                 Debug.LogError("[PlayerPunchReceiver] ¡CRÍTICO: No se encontró Rigidbody2D en la raíz del personaje!");
             }
         }
-
-        /// <summary>
-        /// Punto de entrada local llamado por el manager.
-        /// </summary>
-        public void EnviarImpactoFisicoALaRed(float force, HurtboxCharacteristics.KnockbackDirection direction, float durationStun)
+        
+        
+        public void EnviarImpactoFisicoALaRed(float force, HurtboxCharacteristics.InclinacionVertical inclinacion,
+            HurtboxCharacteristics.DireccionHorizontal direccion,
+            float durationStun,
+            Vector2 direccionDerechaEnemigo,
+            Vector2 direccionArribaEnemigo
+            )
         {
-            // Enviamos el paquete de red optimizado con los datos justos
-            ProcesarFisicaDeGolpeRpc(force, direction, durationStun);
+            ProcesarFisicaDeGolpeRpc(force, inclinacion, direccion, durationStun, direccionDerechaEnemigo, direccionArribaEnemigo);
         }
 
-        /// <summary>
-        /// RPC especializado que se ejecuta en todas las simulaciones de esta gallina por red.
-        /// </summary>
         [Rpc(SendTo.Everyone)]
-        private void ProcesarFisicaDeGolpeRpc(float force, HurtboxCharacteristics.KnockbackDirection direction, float durationStun)
+        private void ProcesarFisicaDeGolpeRpc(float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion, float durationStun, Vector2 dirDerecha, Vector2 dirArriba)
         {
             if (_rb == null) return;
 
-            // 1. Si viene tiempo de aturdimiento, inhabilitamos el movimiento de la gallina dueña
             if (durationStun > 0f && _playerMovement != null)
             {
                 _playerMovement.StunningTime(durationStun);
-                Debug.Log($"<color=yellow>[STUN] Movimiento inhabilitado por {durationStun} segundos.</color>");
             }
 
-            // 2. Traducimos el Enum de dirección a vectores matemáticos 2D
-            Vector2 pushVector = GetVectorFromDirection(direction);
-            
-            // 3. Reseteamos la velocidad acumulada para que el golpe se sienta seco y potente
-            _rb.linearVelocity = Vector2.zero; 
+            Vector2 vectorBase = Vector2.zero;
 
-            // 4. Aplicamos el impulso físico
-            _rb.AddForce(pushVector * force, ForceMode2D.Impulse);
+            if (direccion == HurtboxCharacteristics.DireccionHorizontal.Forward)   vectorBase = dirDerecha;
+            if (direccion == HurtboxCharacteristics.DireccionHorizontal.Backward)  vectorBase = -dirDerecha;
+            if (direccion == HurtboxCharacteristics.DireccionHorizontal.Up)        vectorBase = dirArriba;
+            if (direccion == HurtboxCharacteristics.DireccionHorizontal.Down)      vectorBase = -dirArriba;
 
-            Debug.Log($"<color=cyan>[PlayerPunchReceiver RPC] ¡Impacto procesado! Fuerza: {force} | Dirección: {direction}</color>");
-        }
-
-        private Vector2 GetVectorFromDirection(HurtboxCharacteristics.KnockbackDirection direction)
-        {
-            return direction switch
+            if (inclinacion == HurtboxCharacteristics.InclinacionVertical.Top)
             {
-                HurtboxCharacteristics.KnockbackDirection.Top => Vector2.up,
-                HurtboxCharacteristics.KnockbackDirection.Left => Vector2.left,
-                HurtboxCharacteristics.KnockbackDirection.Right => Vector2.right,
-                HurtboxCharacteristics.KnockbackDirection.TopLeft => new Vector2(-1f, 1f).normalized,
-                HurtboxCharacteristics.KnockbackDirection.TopRight => new Vector2(1f, 1f).normalized,
-                _ => Vector2.zero
-            };
+                vectorBase += Vector2.up;
+            }
+            else if (inclinacion == HurtboxCharacteristics.InclinacionVertical.Bottom)
+            {
+                vectorBase += Vector2.down;
+            }
+
+            Vector2 finalPushVector = vectorBase.normalized;
+
+            _rb.linearVelocity = Vector2.zero;
+            _rb.AddForce(finalPushVector * force, ForceMode2D.Impulse);
         }
     }
 }

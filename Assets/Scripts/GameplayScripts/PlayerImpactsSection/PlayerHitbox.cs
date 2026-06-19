@@ -31,10 +31,10 @@ namespace GameplayScripts.PlayerImpactsSection
             if (IsImmuneTo(collision)) return;
 
             RegisterImpact(collision, characteristics.Cooldwon);
-            
+    
             if (_impactManager != null)
             {
-                _impactManager.ReceiveImpact(characteristics);
+                _impactManager.ReceiveImpact(characteristics, collision.transform.right, collision.transform.up);
             }
         }
 

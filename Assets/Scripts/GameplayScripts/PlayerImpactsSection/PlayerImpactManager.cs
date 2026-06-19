@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace GameplayScripts.PlayerImpactsSection
 {
-    // Distribuidor local en la pantalla del atacante
     public class PlayerImpactManager : MonoBehaviour
     {
         private PlayerPunchReceiver _punchReceiver;
@@ -13,33 +12,29 @@ namespace GameplayScripts.PlayerImpactsSection
             _punchReceiver = GetComponentInChildren<PlayerPunchReceiver>();
         }
 
-        /// <summary>
-        /// El detector de choques (Hitbox) llama a este método localmente.
-        /// </summary>
-        public void ReceiveImpact(HurtboxCharacteristics characteristics)
+        public void ReceiveImpact(HurtboxCharacteristics characteristics, Vector3 forwardEnemigo, Vector3 upEnemigo)
         {
             if (characteristics == null) return;
 
             switch (characteristics.Type)
             {
                 case HurtboxCharacteristics.ImpactType.Punch:
-                    
                     if (_punchReceiver != null)
                     {
-                        // Si la Hurtbox tiene activado el aturdimiento, mandamos su tiempo. Si no, mandamos 0.
                         float tiempoAturdimiento = characteristics.Stunning ? characteristics.StunningTime : 0f;
 
-                        // Le pasamos la pelota al receptor físico incluyendo el tiempo de Stun de la Hurtbox
                         _punchReceiver.EnviarImpactoFisicoALaRed(
                             characteristics.Knockback, 
-                            characteristics.Direction, 
-                            tiempoAturdimiento
+                            characteristics.Inclinacion,
+                            characteristics.Direccion,
+                            tiempoAturdimiento,
+                            forwardEnemigo,
+                            upEnemigo
                         );
                     }
                     break;
 
                 case HurtboxCharacteristics.ImpactType.Environmental:
-                    // Aquí irían las lógicas de trampas en el futuro
                     break;
             }
         }
