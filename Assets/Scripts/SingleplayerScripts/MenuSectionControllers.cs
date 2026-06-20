@@ -10,7 +10,7 @@ namespace SingleplayerScripts {
 
         public void OnExitButtonClicked() {
             if (GameplayNetworkManager.Instance != null) {
-                GameplayNetworkManager.Instance.CloseHost();
+                GameplayNetworkManager.Instance.CloseConnection();
 
                 Debug.Log("<color=red>[UI] Botón Salir presionado. Servidor cerrado.</color>");
             }

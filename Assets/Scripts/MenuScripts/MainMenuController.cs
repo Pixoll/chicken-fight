@@ -41,6 +41,10 @@ namespace MenuScripts {
         }
 
         public void OpenMultiplayerOptionsMenu() {
+            if (multiplayerLobbySection.activeInHierarchy || multiplayerJoinLobbySection.activeInHierarchy) {
+                GameplayNetworkManager.Instance.CloseConnection();
+            }
+
             multiplayerOptionsSection.SetActive(true);
             multiplayerLobbySection.SetActive(false);
             multiplayerJoinLobbySection.SetActive(false);
@@ -52,7 +56,7 @@ namespace MenuScripts {
             if (GameplayNetworkManager.Instance != null) {
                 GameplayNetworkManager.Instance.CreateHost();
 
-                string generatedCode = GameplayNetworkManager.Instance.GetCurrentHostCode();
+                string generatedCode = GameplayNetworkManager.GetCurrentHostCode();
                 if (hostCodeText != null) {
                     hostCodeText.text = $"CÓDIGO DE SALA: {generatedCode}";
                 }
@@ -101,7 +105,7 @@ namespace MenuScripts {
             Debug.Log("[UI - MainMenuController] Cancelando Host/Lobby. Limpiando suscripciones...");
             if (GameplayNetworkManager.Instance != null) {
                 GameplayNetworkManager.Instance.OnPlayerJoined -= ActualizarTextoLobbyClienteConectado;
-                GameplayNetworkManager.Instance.CloseHost();
+                GameplayNetworkManager.Instance.CloseConnection();
             }
             OpenMultiplayerOptionsMenu();
         }

@@ -272,6 +272,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: ChickenClon
       objectReference: {fileID: 0}
+    - target: {fileID: 2617522168679774054, guid: 75122443e95a3394486d48ac38947019, type: 3}
+      propertyPath: stunning
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2617522168679774054, guid: 75122443e95a3394486d48ac38947019, type: 3}
+      propertyPath: direccion
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2617522168679774054, guid: 75122443e95a3394486d48ac38947019, type: 3}
+      propertyPath: stunningTime
+      value: 0.5
+      objectReference: {fileID: 0}
     - target: {fileID: 8235072395278142501, guid: 75122443e95a3394486d48ac38947019, type: 3}
       propertyPath: m_LocalPosition.x
       value: 5.26
