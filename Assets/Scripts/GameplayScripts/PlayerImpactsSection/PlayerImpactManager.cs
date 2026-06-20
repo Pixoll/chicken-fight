@@ -24,6 +24,7 @@ namespace GameplayScripts.PlayerImpactsSection
                         float tiempoAturdimiento = characteristics.Stunning ? characteristics.StunningTime : 0f;
 
                         _punchReceiver.EnviarImpactoFisicoALaRed(
+                            characteristics.Damage,
                             characteristics.Knockback, 
                             characteristics.Inclinacion,
                             characteristics.Direccion,

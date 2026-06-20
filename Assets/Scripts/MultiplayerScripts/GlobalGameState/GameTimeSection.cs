@@ -1,4 +1,4 @@
-using TMPro;
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -6,40 +6,19 @@ namespace MultiplayerScripts.GlobalGameState
 {
     public class GameTimeSection : NetworkBehaviour
     {
-        private enum FasePartida 
-        { 
-            ConteoInicial, 
-            Peleando, 
-            Ultimos10Segundos, 
-            FinPartida 
-        }
-
+        [Header("Configuración General")]
         [SerializeField] private float tiempoMaximoPartida = 99f;
-        [SerializeField] private float duracionConteoInicial = 3f;
-        
-        [SerializeField] private GameObject countPanel;
-        [SerializeField] private GameObject timePanel;
-        [SerializeField] private GameObject warningPanel;
-        [SerializeField] private GameObject endPanel;
-        
-        [SerializeField] private TMP_Text textoReloj;
-        [SerializeField] private TMP_Text textoConteo;
+
+        [Header("Línea de Tiempo Dinámica")]
+        [SerializeField] private List<TimeElement> lineaDeTiempo = new List<TimeElement>();
+
+        private Dictionary<int, GameObject> _instanciasClonadas = new Dictionary<int, GameObject>();
 
         private NetworkVariable<float> _tiempoRestante = new NetworkVariable<float>(99f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-        private NetworkVariable<FasePartida> _faseActual = new NetworkVariable<FasePartida>(FasePartida.ConteoInicial, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-        
         private bool _partidaActiva = false;
-        private float _cronometroConteo;
 
         public override void OnNetworkSpawn()
         {
-            _tiempoRestante.OnValueChanged += ActualizarRelojUI;
-            _faseActual.OnValueChanged += OnFasePartidaChanged;
-
-            if (countPanel != null) countPanel.SetActive(true);
-            if (timePanel != null) timePanel.SetActive(true);
-            if (warningPanel != null) warningPanel.SetActive(false);
-            if (endPanel != null) endPanel.SetActive(false);
         }
 
         public void IniciarCronometroMaestro()
@@ -47,17 +26,6 @@ namespace MultiplayerScripts.GlobalGameState
             if (IsServer == false) return;
 
             _tiempoRestante.Value = tiempoMaximoPartida;
-            _faseActual.Value = FasePartida.ConteoInicial;
-            
-            if (duracionConteoInicial <= 0f)
-            {
-                _cronometroConteo = 3f;
-            }
-            else
-            {
-                _cronometroConteo = duracionConteoInicial;
-            }
-            
             _partidaActiva = true;
         }
 
@@ -65,88 +33,80 @@ namespace MultiplayerScripts.GlobalGameState
         {
             if (IsServer == false || _partidaActiva == false) return;
 
-            if (_faseActual.Value == FasePartida.ConteoInicial)
+            if (_tiempoRestante.Value > 0f)
             {
-                _cronometroConteo -= Time.deltaTime;
-                int segundos = Mathf.CeilToInt(_cronometroConteo);
-                
-                if (segundos > 0) 
-                {
-                    ActualizarTextoConteoRpc(segundos.ToString());
-                }
-                else 
-                {
-                    _faseActual.Value = FasePartida.Peleando;
-                }
+                _tiempoRestante.Value -= Time.deltaTime;
+                ProcesarEventosDeTiempoServer(_tiempoRestante.Value);
             }
             else
             {
-                if (_tiempoRestante.Value > 0f)
-                {
-                    _tiempoRestante.Value -= Time.deltaTime;
-                    
-                    if (_tiempoRestante.Value <= 10f && _faseActual.Value == FasePartida.Peleando) 
-                    {
-                        _faseActual.Value = FasePartida.Ultimos10Segundos;
-                    }
-                }
-                else
-                {
-                    _tiempoRestante.Value = 0f;
-                    _faseActual.Value = FasePartida.FinPartida;
-                    _partidaActiva = false;
-                }
+                _tiempoRestante.Value = 0f;
+                _partidaActiva = false;
             }
         }
 
-        private void OnFasePartidaChanged(FasePartida faseAnterior, FasePartida faseNueva)
+        private void ProcesarEventosDeTiempoServer(float segundoActual)
         {
-            if (faseNueva == FasePartida.Peleando)
+            for (int i = 0; i < lineaDeTiempo.Count; i++)
             {
-                if (textoConteo != null) textoConteo.text = "¡PELEEN!";
-                Invoke("KillCountPanel", 1.2f);
-            }
-            else if (faseNueva == FasePartida.Ultimos10Segundos)
-            {
-                if (warningPanel != null) warningPanel.SetActive(true);
-            }
-            else if (faseNueva == FasePartida.FinPartida)
-            {
-                if (timePanel != null) timePanel.SetActive(false);
-                if (warningPanel != null) warningPanel.SetActive(false);
-                if (endPanel != null) endPanel.SetActive(true);
-            }
-        }
+                TimeElement elemento = lineaDeTiempo[i];
+                if (elemento.objetoVisualoFisico == null) continue;
 
-        private void ActualizarRelojUI(float valorAnterior, float valorNuevo)
-        {
-            if (textoReloj != null) 
-            {
-                textoReloj.text = Mathf.CeilToInt(valorNuevo).ToString();
+                if (segundoActual <= elemento.segundoAparicion && elemento.yaAparecio == false && elemento.yaTermino == false)
+                {
+                    elemento.yaAparecio = true;
+                    GestionarEstadoObjetoRpc(i, true, false);
+                }
+
+                if (segundoActual <= elemento.segundoDesaparicion && elemento.yaAparecio == true && elemento.yaTermino == false)
+                {
+                    elemento.yaTermino = true;
+                    bool destruir = elemento.queHacerAlTerminar == TimeElement.AccionFinal.DestruirObjeto;
+                    GestionarEstadoObjetoRpc(i, false, destruir);
+                }
             }
         }
 
         [Rpc(SendTo.Everyone)]
-        private void ActualizarTextoConteoRpc(string texto) 
-        { 
-            if (textoConteo != null && _faseActual.Value == FasePartida.ConteoInicial) 
-            {
-                textoConteo.text = texto; 
-            }
-        }
-
-        private void KillCountPanel() 
-        { 
-            if (countPanel != null) 
-            {
-                Destroy(countPanel); 
-            }
-        }
-
-        public override void OnNetworkDespawn() 
+        private void GestionarEstadoObjetoRpc(int indiceElemento, bool activar, bool destruir)
         {
-            _tiempoRestante.OnValueChanged -= ActualizarRelojUI;
-            _faseActual.OnValueChanged -= OnFasePartidaChanged;
+            if (indiceElemento < 0 || indiceElemento >= lineaDeTiempo.Count) return;
+
+            TimeElement elemento = lineaDeTiempo[indiceElemento];
+            if (elemento.objetoVisualoFisico == null) return;
+
+            if (activar == true)
+            {
+                GameObject clon = Instantiate(elemento.objetoVisualoFisico);
+                
+                _instanciasClonadas[indiceElemento] = clon;
+
+                if (elemento.puntoDeSpawneo != null)
+                {
+                    clon.transform.SetParent(elemento.puntoDeSpawneo, false);
+                    clon.transform.position = elemento.puntoDeSpawneo.position;
+                }
+            }
+            else
+            {
+                if (_instanciasClonadas.TryGetValue(indiceElemento, out GameObject clonAsociado))
+                {
+                    if (clonAsociado == null) return;
+
+                    if (destruir == true)
+                    {
+                        Destroy(clonAsociado);
+                    }
+                    else
+                    {
+                        clonAsociado.transform.SetParent(null);
+                    }
+
+                    _instanciasClonadas.Remove(indiceElemento);
+                }
+            }
         }
+        
+        public float TiempoRestante => _tiempoRestante.Value;
     }
 }

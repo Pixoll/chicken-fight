@@ -6,35 +6,69 @@ namespace GameplayScripts.PlayerImpactsSection
     public class PlayerHitbox : MonoBehaviour
     {
         private int _hurtboxLayer;
+        private int _objectBoxLayer;
+        
         private Collider2D[] _myColliders;
         private Transform _myChickenRoot;
         private PlayerImpactManager _impactManager;
+        private PlayerIdentity _myIdentity;
 
-        private readonly Dictionary<Collider2D, float> _trackedHurtboxes = new Dictionary<Collider2D, float>();
+        private struct TrackedInfo
+        {
+            public HurtboxCharacteristics characteristics;
+            public float expireTime;
+        }
+
+        private readonly Dictionary<Collider2D, TrackedInfo> _trackedHurtboxes = new Dictionary<Collider2D, TrackedInfo>();
 
         private void Awake()
         {
             _hurtboxLayer = LayerMask.NameToLayer("Hurtbox");
+            _objectBoxLayer = LayerMask.NameToLayer("ObjectBox");
+            
             _myColliders = GetComponents<Collider2D>();
             _myChickenRoot = transform.root;
             _impactManager = _myChickenRoot.GetComponentInChildren<PlayerImpactManager>();
+            _myIdentity = _myChickenRoot.GetComponent<PlayerIdentity>();
         }
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
-            if (collision.gameObject.layer != _hurtboxLayer) return;
-            if (collision.transform.root == _myChickenRoot) return;
-
-            HurtboxCharacteristics characteristics = collision.GetComponent<HurtboxCharacteristics>();
-            if (characteristics == null) return;
-
-            if (IsImmuneTo(collision)) return;
-
-            RegisterImpact(collision, characteristics.Cooldwon);
-    
-            if (_impactManager != null)
+            if (collision.gameObject.layer == _hurtboxLayer)
             {
-                _impactManager.ReceiveImpact(characteristics, collision.transform.right, collision.transform.up);
+                if (collision.transform.root == _myChickenRoot) return;
+
+                HurtboxCharacteristics characteristics = collision.GetComponent<HurtboxCharacteristics>();
+                if (characteristics == null) return;
+
+                if (IsImmuneTo(collision)) return;
+
+                RegisterImpact(collision, characteristics);
+        
+                if (_impactManager != null)
+                {
+                    _impactManager.ReceiveImpact(characteristics, collision.transform.right, collision.transform.up);
+                }
+                return;
+            }
+
+            if (collision.gameObject.layer == _objectBoxLayer)
+            {
+                ObjectBoxCharacteristics objectCharacteristics = collision.GetComponent<ObjectBoxCharacteristics>();
+                if (objectCharacteristics == null) return;
+
+                PlayerPunch playerPunch = _myChickenRoot.GetComponentInChildren<PlayerPunch>();
+
+                if (playerPunch != null)
+                {
+                    if (objectCharacteristics.NombreObjeto == "Espada")
+                    {
+                        playerPunch.ObjetoActual = PlayerPunch.TipoObjetoEquipado.Espada;
+                        Debug.Log($"[EQUIPAR] {gameObject.name} ha equipado: ESPADA");
+                    }
+                }
+
+                Destroy(collision.gameObject);
             }
         }
 
@@ -43,56 +77,58 @@ namespace GameplayScripts.PlayerImpactsSection
             EvaluateHurtboxExpirations();
         }
 
- 
         private bool IsImmuneTo(Collider2D hurtbox)
         {
-            if (_trackedHurtboxes.TryGetValue(hurtbox, out float cooldownExpireTime))
+            if (_trackedHurtboxes.TryGetValue(hurtbox, out TrackedInfo info))
             {
-                return Time.time < cooldownExpireTime;
+                return Time.time < info.expireTime;
             }
             return false;
         }
 
-
-        private void RegisterImpact(Collider2D hurtbox, float cooldownDuration)
+        private void RegisterImpact(Collider2D hurtbox, HurtboxCharacteristics characteristics)
         {
-            float expireTime = Time.time + cooldownDuration;
+            TrackedInfo info;
+            info.characteristics = characteristics;
+            info.expireTime = Time.time + characteristics.Cooldwon;
             
-            if (_trackedHurtboxes.ContainsKey(hurtbox))
-            {
-                _trackedHurtboxes[hurtbox] = expireTime;
-            }
-            else
-            {
-                _trackedHurtboxes.Add(hurtbox, expireTime);
-            }
+            _trackedHurtboxes[hurtbox] = info;
         }
-
 
         private void EvaluateHurtboxExpirations()
         {
             if (_trackedHurtboxes.Count == 0) return;
 
             List<Collider2D> toRemove = new List<Collider2D>();
+            var keys = new List<Collider2D>(_trackedHurtboxes.Keys);
 
-            foreach (var kvp in _trackedHurtboxes)
+            foreach (Collider2D hurtbox in keys)
             {
-                Collider2D hurtbox = kvp.Key;
-                float expireTime = kvp.Value;
-
                 if (!hurtbox || !hurtbox.gameObject.activeInHierarchy)
                 {
                     toRemove.Add(hurtbox);
                     continue;
                 }
 
-                bool cooldownEnded = Time.time >= expireTime;
-
-                bool isNotTouching = !IsStillTouching(hurtbox);
-
-                if (cooldownEnded || isNotTouching)
+                bool isStillTouching = IsStillTouching(hurtbox);
+                
+                if (!isStillTouching)
                 {
                     toRemove.Add(hurtbox);
+                    continue;
+                }
+
+                TrackedInfo info = _trackedHurtboxes[hurtbox];
+                bool cooldownEnded = Time.time >= info.expireTime;
+
+                if (cooldownEnded && isStillTouching)
+                {
+                    RegisterImpact(hurtbox, info.characteristics);
+                    
+                    if (_impactManager)
+                    {
+                        _impactManager.ReceiveImpact(info.characteristics, hurtbox.transform.right, hurtbox.transform.up);
+                    }
                 }
             }
 

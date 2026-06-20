@@ -28,7 +28,6 @@ namespace MultiplayerScripts.GlobalGameState
         {
             if (IsServer)
             {
-                // 1. Esperamos 1 segundo de cortesía para que la red se estabilice
                 Invoke(nameof(DispararArranqueDePartida), 1f);
             }
         }

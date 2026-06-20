@@ -7,26 +7,50 @@ namespace GameplayScripts.PlayerImpactsSection.PlayerReceiverSection
     {
         private Rigidbody2D _rb;
         private PlayerMovement _playerMovement;
-        
+        private PlayerIdentity _playerIdentity;
+        private MultiplayerScripts.MatchInformationManager _matchManager;
+
         private void Awake()
         {
-            _rb = transform.root.GetComponent<Rigidbody2D>();
-            _playerMovement = transform.root.GetComponentInChildren<PlayerMovement>();
+            Transform root = transform.root;
+            _rb = root.GetComponent<Rigidbody2D>();
+            _playerIdentity = root.GetComponent<PlayerIdentity>();
+            
+            // Buscamos el movimiento en los hijos
+            _playerMovement = root.GetComponentInChildren<PlayerMovement>();
             
             if (_rb == null)
             {
                 Debug.LogError("[PlayerPunchReceiver] ¡CRÍTICO: No se encontró Rigidbody2D en la raíz del personaje!");
             }
+
+            if (_playerIdentity == null)
+            {
+                Debug.LogWarning("[PlayerPunchReceiver] No se encontró PlayerIdentity en la raíz. El daño no se restará.");
+            }
+        }
+
+        private void Start()
+        {
+            _matchManager = FindFirstObjectByType<MultiplayerScripts.MatchInformationManager>();
         }
         
-        
-        public void EnviarImpactoFisicoALaRed(float force, HurtboxCharacteristics.InclinacionVertical inclinacion,
+
+        public void EnviarImpactoFisicoALaRed(
+            float damage,
+            float force, 
+            HurtboxCharacteristics.InclinacionVertical inclinacion,
             HurtboxCharacteristics.DireccionHorizontal direccion,
             float durationStun,
             Vector2 direccionDerechaEnemigo,
-            Vector2 direccionArribaEnemigo
-            )
+            Vector2 direccionArribaEnemigo)
         {
+
+            if (_matchManager != null && _playerIdentity != null)
+            {
+                _matchManager.ModificarVidaJugador(_playerIdentity.NombreIdentificador, -damage);
+            }
+
             ProcesarFisicaDeGolpeRpc(force, inclinacion, direccion, durationStun, direccionDerechaEnemigo, direccionArribaEnemigo);
         }
 
