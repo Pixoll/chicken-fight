@@ -1548,6 +1548,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameplayScripts.PlayerImpactsSection.HurtboxCharacteristics
   impactType: 0
+  propiedadOrigen: 0
   inclinacion: 0
   direccion: 1
   knockbackForce: 0
@@ -1785,6 +1786,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameplayScripts.PlayerImpactsSection.HurtboxCharacteristics
   impactType: 0
+  propiedadOrigen: 0
   inclinacion: 1
   direccion: 1
   knockbackForce: 60
@@ -2522,7 +2524,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &680660120
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2536,6 +2538,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameplayScripts.PlayerImpactsSection.HurtboxCharacteristics
   impactType: 0
+  propiedadOrigen: 0
   inclinacion: 0
   direccion: 1
   knockbackForce: 0
@@ -2743,6 +2746,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameplayScripts.PlayerImpactsSection.HurtboxCharacteristics
   impactType: 0
+  propiedadOrigen: 0
   inclinacion: 1
   direccion: 1
   knockbackForce: 60
@@ -3250,6 +3254,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameplayScripts.PlayerImpactsSection.HurtboxCharacteristics
   impactType: 0
+  propiedadOrigen: 0
   inclinacion: 1
   direccion: 1
   knockbackForce: 60
@@ -3822,6 +3827,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameplayScripts.PlayerImpactsSection.HurtboxCharacteristics
   impactType: 0
+  propiedadOrigen: 0
   inclinacion: 0
   direccion: 1
   knockbackForce: 0

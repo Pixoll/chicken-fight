@@ -911,6 +911,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameplayScripts.PlayerImpactsSection.HurtboxCharacteristics
   impactType: 0
+  propiedadOrigen: 0
   inclinacion: 0
   direccion: 1
   knockbackForce: 15
@@ -1012,6 +1013,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameplayScripts.PlayerImpactsSection.HurtboxCharacteristics
   impactType: 0
+  propiedadOrigen: 0
   inclinacion: 0
   direccion: 1
   knockbackForce: 10
@@ -1275,7 +1277,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 347b86a0a605c664d819bac775827f88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameplayScripts.PlayerIdentity
-  nombreIdentificador: nigger
+  nombreIdentificador: 
 --- !u!1 &7297456062256546854
 GameObject:
   m_ObjectHideFlags: 0
