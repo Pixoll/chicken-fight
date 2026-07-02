@@ -6,13 +6,14 @@ namespace GameplayScripts {
         private bool _uiJumpPressed;
         private bool _uiPunchPressed;
 
-        private void Awake() {
-            _joystick = FindFirstObjectByType<Joystick>();
+        public void ConfigurarJoystickLocal(Joystick joystickAsignado) {
+            _joystick = joystickAsignado;
         }
 
         public float GetHorizontalInput() {
-            float joystickX = _joystick.Direction.x;
+            if (_joystick == null) return 0f;
 
+            float joystickX = _joystick.Direction.x;
             return joystickX switch {
                 > 0.1f => 1f,
                 < -0.1f => -1f,
@@ -22,18 +23,14 @@ namespace GameplayScripts {
 
         public bool IsJumpPressedThisFrame() {
             if (!_uiJumpPressed) return false;
-
             _uiJumpPressed = false;
             return true;
-
         }
 
         public bool IsPunchPressedThisFrame() {
             if (!_uiPunchPressed) return false;
-
             _uiPunchPressed = false;
             return true;
-
         }
 
         public void TriggerUIJump() {
@@ -45,4 +42,3 @@ namespace GameplayScripts {
         }
     }
 }
-

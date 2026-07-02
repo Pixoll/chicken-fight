@@ -17,7 +17,7 @@ namespace MultiplayerScripts {
         public bool IsPlayer1 { get; private set; }
         public bool IsPlayer2 => !IsPlayer1;
 
-    private void Awake() {
+        private void Awake() {
             if (Instance != null && Instance != this) {
                 Destroy(gameObject);
                 return;
@@ -183,25 +183,41 @@ namespace MultiplayerScripts {
 
         public Action<ulong> OnPlayerJoined;
 
+        // private void OnClientConnected(ulong clientId) {
+        //     // Este log se imprimirá SI O SI si la red conecta, sin importar si eres host o cliente
+        //     Debug.Log(
+        //         $"<color=magenta>=========== [ALERTA NATIVA NETCODE] OnClientConnected disparado para ID: {clientId} ===========</color>");
+        //
+        //     Debug.Log($"[INFO] LocalClientId de esta instancia actual es: {NetworkManager.Singleton.LocalClientId}");
+        //
+        //     if (clientId != NetworkManager.Singleton.LocalClientId) {
+        //         Debug.Log(
+        //             $"<color=green>[GameplayNetworkManager] ¡ÉXITO! Un cliente real (ID externo: {clientId}) superó el handshake de red y entró al Host.</color>");
+        //
+        //         OnPlayerJoined?.Invoke(clientId);
+        //     } else {
+        //         Debug.Log(
+        //             "[GameplayNetworkManager] OnClientConnected detectó la autoconexión de la instancia local (Host conectándose a sí mismo). Ignorando para la UI externa.");
+        //     }
+        //
+        //     SceneManager.LoadScene("RoundMode");
+        // }
+        
         private void OnClientConnected(ulong clientId) {
-            // Este log se imprimirá SI O SI si la red conecta, sin importar si eres host o cliente
-            Debug.Log(
-                $"<color=magenta>=========== [ALERTA NATIVA NETCODE] OnClientConnected disparado para ID: {clientId} ===========</color>");
+            Debug.Log($"<color=magenta>=========== [ALERTA NATIVA] OnClientConnected ID: {clientId} ===========</color>");
 
-            Debug.Log($"[INFO] LocalClientId de esta instancia actual es: {NetworkManager.Singleton.LocalClientId}");
+            if (NetworkManager.Singleton.IsServer) {
+                if (clientId != NetworkManager.Singleton.LocalClientId) {
+                    Debug.Log($"<color=green>[GameplayNetworkManager] ¡Rival conectado! Cargando escena de pelea...</color>");
+            
+                    OnPlayerJoined?.Invoke(clientId);
 
-            if (clientId != NetworkManager.Singleton.LocalClientId) {
-                Debug.Log(
-                    $"<color=green>[GameplayNetworkManager] ¡ÉXITO! Un cliente real (ID externo: {clientId}) superó el handshake de red y entró al Host.</color>");
-
-                OnPlayerJoined?.Invoke(clientId);
-            } else {
-                Debug.Log(
-                    "[GameplayNetworkManager] OnClientConnected detectó la autoconexión de la instancia local (Host conectándose a sí mismo). Ignorando para la UI externa.");
+                    // 🔍 ÚNICA RESPONSABILIDAD: Mover a todos los clientes a la escena de combate
+                    NetworkManager.Singleton.SceneManager.LoadScene("RoundMode", LoadSceneMode.Single);
+                }
             }
-
-            SceneManager.LoadScene("RoundMode");
         }
+        
 
         private void OnClientDisconnected(ulong clientId) {
             Debug.Log(

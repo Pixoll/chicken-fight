@@ -11,7 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MainMenu.unity
     guid: 306b6bb9cba26da4bb373eec60fc5573
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/CombatArena.unity
     guid: 01626021bd250164f957e6c2fa0e9c4d
   - enabled: 1

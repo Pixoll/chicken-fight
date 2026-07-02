@@ -3,11 +3,11 @@ using UnityEngine;
 
 namespace GameplayScripts {
     public class PlayerJump : NetworkBehaviour {
-        [Header("Configuración del Salto")] [SerializeField]
-        private float jumpForce = 5f;
+        [Header("Configuración del Salto")] 
+        [SerializeField] private float jumpForce = 5f;
 
-        [Header("Referencias de Colisión")] [SerializeField]
-        private Collider2D groundCheckCollider;
+        [Header("Referencias de Colisión")] 
+        [SerializeField] private Collider2D groundCheckCollider;
 
         private Rigidbody2D _rb;
         private PlayerInputHandler _inputHandler;
@@ -18,27 +18,30 @@ namespace GameplayScripts {
 
         private void Awake() {
             _rb = GetComponentInParent<Rigidbody2D>();
-
             _inputHandler = transform.root.GetComponentInChildren<PlayerInputHandler>();
             _groundLayerMask = LayerMask.GetMask("Ground");
         }
 
         private void Update() {
-            if (!IsOwner || !_inputHandler.IsJumpPressedThisFrame()) return;
+            if (!IsOwner) return;
 
-            _jumpRequested = true;
+            if (_inputHandler != null && _inputHandler.IsJumpPressedThisFrame()) {
+                _jumpRequested = true;
+            }
         }
 
         private void FixedUpdate() {
             CheckGroundedOverlap();
 
-            if (!IsOwner || !_jumpRequested) return;
-
-            ExecuteJump();
-            _jumpRequested = false;
+            if (_jumpRequested) {
+                ExecuteJump();
+                _jumpRequested = false;
+            }
         }
 
         private void CheckGroundedOverlap() {
+            if (groundCheckCollider == null) return;
+
             Bounds bounds = groundCheckCollider.bounds;
             Vector2 overlapCenter = new Vector2(bounds.center.x, bounds.center.y - bounds.extents.y - 0.02f);
             Vector2 overlapSize = new Vector2(bounds.size.x * 0.9f, 0.05f);
@@ -48,7 +51,7 @@ namespace GameplayScripts {
         }
 
         private void ExecuteJump() {
-            if (!_isGrounded) return;
+            if (!_isGrounded || _rb == null) return;
 
             _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, 0);
             _rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
@@ -56,11 +59,5 @@ namespace GameplayScripts {
         }
 
         public bool IsGrounded => _isGrounded;
-
-        public void RequestJumpViaUI() {
-            if (!IsOwner) return;
-
-            _jumpRequested = true;
-        }
     }
 }

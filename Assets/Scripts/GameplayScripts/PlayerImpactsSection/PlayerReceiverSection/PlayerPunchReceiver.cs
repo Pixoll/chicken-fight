@@ -15,27 +15,19 @@ namespace GameplayScripts.PlayerImpactsSection.PlayerReceiverSection
             Transform root = transform.root;
             _rb = root.GetComponent<Rigidbody2D>();
             _playerIdentity = root.GetComponent<PlayerIdentity>();
-            
-            // Buscamos el movimiento en los hijos
             _playerMovement = root.GetComponentInChildren<PlayerMovement>();
             
-            if (_rb == null)
-            {
-                Debug.LogError("[PlayerPunchReceiver] ¡CRÍTICO: No se encontró Rigidbody2D en la raíz del personaje!");
-            }
-
-            if (_playerIdentity == null)
-            {
-                Debug.LogWarning("[PlayerPunchReceiver] No se encontró PlayerIdentity en la raíz. El daño no se restará.");
-            }
+            if (_rb == null) Debug.LogError("[PlayerPunchReceiver] ¡CRÍTICO: No se encontró Rigidbody2D en la raíz!");
         }
 
         private void Start()
         {
             _matchManager = FindFirstObjectByType<MultiplayerScripts.MatchInformationManager>();
         }
-        
 
+        /// <summary>
+        /// Método llamado por el ImpactManager local.
+        /// </summary>
         public void EnviarImpactoFisicoALaRed(
             float damage,
             float force, 
@@ -45,17 +37,43 @@ namespace GameplayScripts.PlayerImpactsSection.PlayerReceiverSection
             Vector2 direccionDerechaEnemigo,
             Vector2 direccionArribaEnemigo)
         {
+            // 🔍 LOG DE DIAGNÓSTICO CRÍTICO
+            string dueñoObjeto = IsOwner ? "SÍ SOY EL DUEÑO" : "NO SOY EL DUEÑO";
+            Debug.Log($"<color=orange>[HITBOX DETECTED]</color> Objeto: {gameObject.name} | Identificador: {_playerIdentity?.NombreIdentificador} | {dueñoObjeto} | IsServer: {IsServer}");
 
-            if (_matchManager != null && _playerIdentity != null)
-            {
-                _matchManager.ModificarVidaJugador(_playerIdentity.NombreIdentificador, -damage);
-            }
+            // Si este filtro está abortando siempre, significa que la colisión se está leyendo en la instancia equivocada
+            if (!IsOwner) return;
 
-            ProcesarFisicaDeGolpeRpc(force, inclinacion, direccion, durationStun, direccionDerechaEnemigo, direccionArribaEnemigo);
+            Debug.Log($"<color=green>[RECEIVER PROCESANDO]</color> ¡Filtro aprobado! Aplicando daño y físicas.");
+
+            // 1. Gestionamos la reducción de vida
+            SolicitarAplicarDanoServerRpc(damage, _playerIdentity.NombreIdentificador.ToString());
+
+            // 2. Aplico la física en mi pantalla
+            EjecutarFisicaEfectiva(force, inclinacion, direccion, durationStun, direccionDerechaEnemigo, direccionArribaEnemigo);
+
+            // 3. Sincronización al resto
+            PropagarFisicasAlRestoDeClientesRpc(force, inclinacion, direccion, durationStun, direccionDerechaEnemigo, direccionArribaEnemigo);
         }
 
-        [Rpc(SendTo.Everyone)]
-        private void ProcesarFisicaDeGolpeRpc(float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion, float durationStun, Vector2 dirDerecha, Vector2 dirArriba)
+        [ServerRpc(RequireOwnership = false)]
+        private void SolicitarAplicarDanoServerRpc(float damage, string nombreIdentificador)
+        {
+            if (_matchManager != null)
+            {
+                _matchManager.ModificarVidaJugador(nombreIdentificador, -damage);
+            }
+        }
+
+        // Enviamos el vector exacto calculado por el dueño a todos los clones remotos
+        [Rpc(SendTo.NotMe)]
+        private void PropagarFisicasAlRestoDeClientesRpc(float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion, float durationStun, Vector2 dirDerecha, Vector2 dirArriba)
+        {
+            // Las otras pantallas simplemente imitan la fuerza que el dueño ya experimentó
+            EjecutarFisicaEfectiva(force, inclinacion, direccion, durationStun, dirDerecha, dirArriba);
+        }
+
+        private void EjecutarFisicaEfectiva(float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion, float durationStun, Vector2 dirDerecha, Vector2 dirArriba)
         {
             if (_rb == null) return;
 
@@ -66,10 +84,13 @@ namespace GameplayScripts.PlayerImpactsSection.PlayerReceiverSection
 
             Vector2 vectorBase = Vector2.zero;
 
-            if (direccion == HurtboxCharacteristics.DireccionHorizontal.Forward)   vectorBase = dirDerecha;
-            if (direccion == HurtboxCharacteristics.DireccionHorizontal.Backward)  vectorBase = -dirDerecha;
-            if (direccion == HurtboxCharacteristics.DireccionHorizontal.Up)        vectorBase = dirArriba;
-            if (direccion == HurtboxCharacteristics.DireccionHorizontal.Down)      vectorBase = -dirArriba;
+            switch (direccion)
+            {
+                case HurtboxCharacteristics.DireccionHorizontal.Forward:   vectorBase = dirDerecha; break;
+                case HurtboxCharacteristics.DireccionHorizontal.Backward:  vectorBase = -dirDerecha; break;
+                case HurtboxCharacteristics.DireccionHorizontal.Up:        vectorBase = dirArriba; break;
+                case HurtboxCharacteristics.DireccionHorizontal.Down:      vectorBase = -dirArriba; break;
+            }
 
             if (inclinacion == HurtboxCharacteristics.InclinacionVertical.Top)
             {
