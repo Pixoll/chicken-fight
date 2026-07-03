@@ -3,8 +3,9 @@ using UnityEngine;
 
 namespace MainMenuSection.MenuScripts {
     public class MainMenuController : MonoBehaviour {
-        [Header("Menu Sections")] 
-        [SerializeField] private GameObject mainSection;
+        [Header("Menu Sections")] [SerializeField]
+        private GameObject mainSection;
+
         [SerializeField] private GameObject singleplayerSection;
         [SerializeField] private GameObject multiplayerSection;
         [SerializeField] private GameObject multiplayerOptionsSection;
@@ -12,12 +13,17 @@ namespace MainMenuSection.MenuScripts {
         [SerializeField] private GameObject multiplayerJoinLobbySection;
         [SerializeField] private GameObject preferencesSection;
 
-        [Header("Multiplayer UI Elements")]
-        [SerializeField] private TMP_Text hostCodeText;
-        [SerializeField] private TMP_InputField joinCodeInputField; 
+        [Header("Multiplayer UI Elements")] [SerializeField]
+        private TMP_Text hostCodeText;
 
-        [Header("Lobby Status")]
-        [SerializeField] private TMP_Text lobbyStatusText;
+        [SerializeField] private TMP_InputField joinCodeInputField;
+
+        [Header("Lobby Status")] [SerializeField]
+        private GameObject player2PlaceholderImage;
+
+        [SerializeField] private GameObject player2Image;
+        [SerializeField] private GameObject fightButton;
+        [SerializeField] private GameObject waitingHostText;
 
         private void Start() {
             OpenMainmenuSection();
@@ -52,15 +58,13 @@ namespace MainMenuSection.MenuScripts {
             if (GameplayNetworkManager.Instance != null) {
                 GameplayNetworkManager.Instance.CreateHost();
                 string generatedCode = GameplayNetworkManager.GetCurrentHostCode();
-                if (hostCodeText != null) {
-                    hostCodeText.text = $"CÓDIGO DE SALA: {generatedCode}";
-                }
 
-                if (lobbyStatusText != null) {
-                    lobbyStatusText.text = "ESPERANDO QUE UN RIVAL SE UNA...";
-                }
+                hostCodeText.text = generatedCode;
+                player2PlaceholderImage.SetActive(true);
+                player2Image.SetActive(false);
+                fightButton.SetActive(false);
 
-                GameplayNetworkManager.Instance.OnPlayerJoined += ActualizarTextoLobbyClienteConectado;
+                GameplayNetworkManager.Instance.OnPlayerJoined += OnPlayerJoined;
             }
 
             multiplayerOptionsSection.SetActive(false);
@@ -69,39 +73,42 @@ namespace MainMenuSection.MenuScripts {
         }
 
         public void ConfirmJoinLobby() {
-            if (joinCodeInputField == null) {
-                return;
-            }
-
             string inputCode = joinCodeInputField.text;
 
             if (string.IsNullOrWhiteSpace(inputCode)) {
                 return;
             }
 
-            if (GameplayNetworkManager.Instance != null) {
-                GameplayNetworkManager.Instance.JoinHost(inputCode);
-            }
+            GameplayNetworkManager.Instance.OnJoinedLobby -= OnJoinedLobby;
+            GameplayNetworkManager.Instance.OnJoinedLobby += OnJoinedLobby;
+            GameplayNetworkManager.Instance?.JoinHost(inputCode);
         }
 
         public void CancelHostAndReturn() {
             if (GameplayNetworkManager.Instance != null) {
-                GameplayNetworkManager.Instance.OnPlayerJoined -= ActualizarTextoLobbyClienteConectado;
+                GameplayNetworkManager.Instance.OnPlayerJoined -= OnPlayerJoined;
                 GameplayNetworkManager.Instance.CloseConnection();
             }
+
             OpenMultiplayerOptionsMenu();
         }
-        
-        private void ActualizarTextoLobbyClienteConectado(ulong clientId) {
-            if (lobbyStatusText != null) {
-                lobbyStatusText.text = $"<color=green>¡UN JUGADOR SE HA UNIDO! (ID: {clientId})</color>\nIniciando partida...";
-            }
+
+        private void OnPlayerJoined() {
+            player2PlaceholderImage.SetActive(false);
+            player2Image.SetActive(true);
+            fightButton.SetActive(true);
+            waitingHostText.SetActive(false);
+        }
+
+        private void OnJoinedLobby() {
+            OpenMultiplayerLobbyMenu();
+            player2PlaceholderImage.SetActive(false);
+            player2Image.SetActive(true);
+            waitingHostText.SetActive(true);
         }
 
         public void OpenMultiplayerJoinLobbyMenu() {
-            if (joinCodeInputField != null) {
-                joinCodeInputField.text = "";
-            }
+            joinCodeInputField.text = "";
             multiplayerOptionsSection.SetActive(false);
             multiplayerLobbySection.SetActive(false);
             multiplayerJoinLobbySection.SetActive(true);

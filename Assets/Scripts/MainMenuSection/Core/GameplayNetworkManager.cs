@@ -34,7 +34,8 @@ namespace MainMenuSection {
         }
 
         public void CreateHost() {
-            if (NetworkManager.Singleton == null || NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsClient) {
+            if (NetworkManager.Singleton == null || NetworkManager.Singleton.IsServer ||
+                NetworkManager.Singleton.IsClient) {
                 return;
             }
 
@@ -44,7 +45,7 @@ namespace MainMenuSection {
 
             // Suscribimos el evento de inicio del servidor para detectar al Host como jugador inicial
             NetworkManager.Singleton.OnServerStarted += OnHostStartedLocal;
-            
+
             NetworkManager.Singleton.StartHost();
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
@@ -52,13 +53,13 @@ namespace MainMenuSection {
 
             string ipLocal = GetServerAddress();
             ushort puertoActual = GetCurrentPort();
-            
-            Debug.Log($"<color=cyan>[GameplayNetworkManager] Intentando crear e iniciar un nuevo Host en {ipLocal}:{puertoActual}...</color>");
+
+            Debug.Log(
+                $"<color=cyan>[GameplayNetworkManager] Intentando crear e iniciar un nuevo Host en {ipLocal}:{puertoActual}...</color>");
         }
 
         public void CloseConnection() {
             if (NetworkManager.Singleton == null) return;
-            ushort puertoLiberado = GetCurrentPort();
 
             Debug.Log("<color=red>[GameplayNetworkManager] Cerrando conexión y apagando instancias de red.</color>");
 
@@ -123,62 +124,65 @@ namespace MainMenuSection {
 
             string ipWithoutLastOctets = string.Join(".", GetLocalIPv4().Split('.').SkipLast(2));
             string targetIp = string.Join(".", ipWithoutLastOctets, HexToOctets(hostIdCode.Trim()));
+
             if (string.IsNullOrEmpty(targetIp)) {
                 return;
             }
 
             if (_transport == null) {
                 _transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+                if (_transport == null) return;
             }
 
-            if (_transport != null) {
-                _transport.SetConnectionData(targetIp, 7777);
-                NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-                IsPlayer1 = false;
+            _transport.SetConnectionData(targetIp, 7777);
+            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+            IsPlayer1 = false;
 
-                NetworkManager.Singleton.StartClient();
-            }
+            NetworkManager.Singleton.StartClient();
         }
 
-        public Action<ulong> OnPlayerJoined;
+        public Action OnPlayerJoined;
+        public Action OnJoinedLobby;
 
         private void OnHostStartedLocal() {
             // Desuscribimos inmediatamente para evitar ejecuciones repetidas involuntarias
             NetworkManager.Singleton.OnServerStarted -= OnHostStartedLocal;
-            
+
             // El Host local en Netcode siempre posee el LocalClientId (usualmente 0)
             ulong hostId = NetworkManager.Singleton.LocalClientId;
             ImprimirMensajeUnionJugador(hostId);
         }
-        
-        private void OnClientConnected(ulong clientId) {
-            // Este log se ejecutará localmente en cualquier instancia cuando se conecte con éxito
-            if (!NetworkManager.Singleton.IsServer) {
-                ImprimirMensajeUnionJugador(clientId);
-            }
 
-            if (NetworkManager.Singleton.IsServer) {
-                if (clientId != NetworkManager.Singleton.LocalClientId) {
+        private void OnClientConnected(ulong clientId) {
+            switch (NetworkManager.Singleton.IsServer) {
+                // Este log se ejecutará localmente en cualquier instancia cuando se conecte con éxito
+                case false:
                     ImprimirMensajeUnionJugador(clientId);
-                    OnPlayerJoined?.Invoke(clientId);
-                    NetworkManager.Singleton.SceneManager.LoadScene("RoundMode", LoadSceneMode.Single);
-                }
+                    OnJoinedLobby?.Invoke();
+                    break;
+
+                case true when clientId != NetworkManager.Singleton.LocalClientId:
+                    ImprimirMensajeUnionJugador(clientId);
+                    OnPlayerJoined?.Invoke();
+                    break;
             }
         }
-        
-        private void OnClientDisconnected(ulong clientId) { 
+
+        private void OnClientDisconnected(ulong clientId) {
         }
 
         private void ImprimirMensajeUnionJugador(ulong nuevoClientId) {
             string listaJugadores = "Ninguno";
-            
+
             if (NetworkManager.Singleton != null && NetworkManager.Singleton.ConnectedClientsIds != null) {
                 // Obtenemos los IDs únicos de red de todos los jugadores actuales en el host
-                listaJugadores = string.Join(", ", NetworkManager.Singleton.ConnectedClientsIds.Select(id => $"[ID: {id}]"));
+                listaJugadores = string.Join(", ",
+                    NetworkManager.Singleton.ConnectedClientsIds.Select(id => $"[ID: {id}]"));
             }
 
-            Debug.Log($"<color=green>[GameplayNetworkManager] Se ha unido un nuevo jugador (ID asignado: {nuevoClientId}). " +
-                      $"Jugadores actuales en el host: {listaJugadores}</color>");
+            Debug.Log(
+                $"<color=green>[GameplayNetworkManager] Se ha unido un nuevo jugador (ID asignado: {nuevoClientId}). " +
+                $"Jugadores actuales en el host: {listaJugadores}</color>");
         }
     }
 }

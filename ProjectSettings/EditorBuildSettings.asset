@@ -14,7 +14,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/CombatArena.unity
     guid: 01626021bd250164f957e6c2fa0e9c4d
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/TrainMode.unity
     guid: cf3a7dd3d2071c24a9f236a0555ea617
   - enabled: 1
