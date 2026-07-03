@@ -1,4 +1,5 @@
 ﻿using MultiPlayerSection.GameplayScripts;
+using MultiPlayerSection.NetworkScripts;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -31,24 +32,44 @@ namespace MultiPlayerSection.PlayerScripts
             _isFacingRight.OnValueChanged += OnOrientationChanged;
             UpdateOrientation(_isFacingRight.Value);
 
-            // 获取 NetworkObject 
-            ulong miId = OwnerClientId;
-            
-            Debug.Log($"<color=white>[PLAYER SPAWN] Gallina de Red Spawneda en esta ventana. ID Cliente Dueño: {miId} | ¿Es dueña de esta pantalla (IsOwner)?: {IsOwner}</color>");
-
             if (IsOwner)
             {
                 FightMenuSectionController uiController = FindFirstObjectByType<FightMenuSectionController>();
-                if (uiController != null)
+                PlayerInputHandler handler = transform.root.GetComponentInChildren<PlayerInputHandler>();
+                if (uiController != null && handler != null)
                 {
-                    Debug.Log($"<color=cyan>[PLAYER SPAWN] Gallina dueña (ID: {miId}) encontró el FightMenuSectionController con éxito. Enviando credenciales...</color>");
-                    uiController.VincularGallinaLocal(_inputHandler);
-                }
-                else
-                {
-                    Debug.LogError($"<color=red>[PLAYER SPAWN ERROR] ¡Gallina dueña (ID: {miId}) NO encontró ningún FightMenuSectionController en la escena!</color>");
+                    uiController.VincularGallinaLocal(handler);
                 }
             }
+
+            MatchInformationManager manager = FindFirstObjectByType<MatchInformationManager>();
+            if (manager != null)
+            {
+                if (!manager.EstaLaRondaActiva())
+                {
+                    SpriteRenderer[] renderers = transform.root.GetComponentsInChildren<SpriteRenderer>(true);
+                    foreach (var sr in renderers) sr.enabled = false;
+
+                    Canvas[] uiLocales = transform.root.GetComponentsInChildren<Canvas>(true);
+                    foreach (var canvas in uiLocales) canvas.enabled = false;
+
+                    Rigidbody2D rb = transform.root.GetComponent<Rigidbody2D>();
+                    if (rb != null)
+                    {
+                        rb.bodyType = RigidbodyType2D.Kinematic;
+                        rb.linearVelocity = Vector2.zero;
+                    }
+                }
+            }
+        }
+
+        private void SetComponentesVisualesLocales(bool visible)
+        {
+            SpriteRenderer[] renderers = transform.root.GetComponentsInChildren<SpriteRenderer>(true);
+            foreach (var sr in renderers) sr.enabled = visible;
+
+            Canvas[] uiLocales = transform.root.GetComponentsInChildren<Canvas>(true);
+            foreach (var canvas in uiLocales) canvas.enabled = visible;
         }
 
         private void Update()

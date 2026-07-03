@@ -39,7 +39,7 @@ namespace MultiPlayerSection.PlayerScripts
 
         private void Update() 
         {
-            if (!IsOwner || !_inputHandler.IsPunchPressedThisFrame() || Time.time < _nextPunchTime) return;
+            if (!IsOwner || _inputHandler == null || !_inputHandler.IsPunchPressedThisFrame() || Time.time < _nextPunchTime) return;
 
             ExecutePunch();
             _nextPunchTime = Time.time + punchCooldown;

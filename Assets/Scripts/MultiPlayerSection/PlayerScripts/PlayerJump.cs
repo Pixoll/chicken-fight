@@ -6,7 +6,7 @@ namespace MultiPlayerSection.PlayerScripts {
         [Header("Configuración del Salto")] 
         [SerializeField] private float jumpForce = 5f;
 
-        [Header("Referencias de Colisión")] 
+        [Header("Referencias De Colisión")] 
         [SerializeField] private Collider2D groundCheckCollider;
 
         private Rigidbody2D _rb;
@@ -23,9 +23,9 @@ namespace MultiPlayerSection.PlayerScripts {
         }
 
         private void Update() {
-            if (!IsOwner) return;
+            if (!IsOwner || _inputHandler == null) return;
 
-            if (_inputHandler != null && _inputHandler.IsJumpPressedThisFrame()) {
+            if (_inputHandler.IsJumpPressedThisFrame()) {
                 _jumpRequested = true;
             }
         }

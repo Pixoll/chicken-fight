@@ -6,16 +6,16 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions
 {
     public class PlayerImpactManager : MonoBehaviour
     {
-        // El receptor para ataques de otros jugadores (Con Dueño)
         private PlayerWithOwnerReceiver _ownerReceiver;
-        
-        // El nuevo receptor para peligros del mapa (Sin Dueño)
         private PlayerEnvironmentalReceiver _environmentalReceiver;
 
         private void Awake()
         {
-            _ownerReceiver = GetComponentInChildren<PlayerWithOwnerReceiver>();
-            _environmentalReceiver = GetComponentInChildren<PlayerEnvironmentalReceiver>();
+            _ownerReceiver = GetComponent<PlayerWithOwnerReceiver>();
+            if (_ownerReceiver == null) _ownerReceiver = GetComponentInChildren<PlayerWithOwnerReceiver>();
+            
+            _environmentalReceiver = GetComponent<PlayerEnvironmentalReceiver>();
+            if (_environmentalReceiver == null) _environmentalReceiver = GetComponentInChildren<PlayerEnvironmentalReceiver>();
         }
 
         public void ReceiveImpact(HurtboxCharacteristics characteristics, Vector3 forwardEnemigo, Vector3 upEnemigo, GameObject hurtboxGolpeada)
@@ -23,16 +23,42 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions
             if (characteristics == null || hurtboxGolpeada == null) return;
 
             float tiempoAturdimiento = characteristics.Stunning ? characteristics.StunningTime : 0f;
-
+            
             if (characteristics.Propiedad == HurtboxCharacteristics.PropiedadDaño.ConDueño)
             {
                 if (_ownerReceiver != null)
                 {
-                    // Buscamos el nombre de la gallina víctima desde su raíz
-                    PlayerIdentity identidadVictima = hurtboxGolpeada.transform.root.GetComponent<PlayerIdentity>();
-                    string nombreVictima = identidadVictima != null ? identidadVictima.NombreIdentificador : "Desconocido";
+                    PlayerIdentity identidadVictima = GetComponentInParent<PlayerIdentity>();
+                    string nombreVictima = "";
+                    
+                    if (identidadVictima != null && !string.IsNullOrEmpty(identidadVictima.NombreIdentificador))
+                    {
+                        nombreVictima = identidadVictima.NombreIdentificador;
+                    }
+                    else
+                    {
+                        Unity.Netcode.NetworkObject netObjVictima = GetComponentInParent<Unity.Netcode.NetworkObject>();
+                        if (netObjVictima != null) nombreVictima = netObjVictima.OwnerClientId.ToString();
+                    }
 
-                    // LLAMAMOS AL RECEIVER DEL ATACANTE (LOCAL / DUEÑO)
+                    PlayerIdentity identidadAtacante = characteristics.GetComponentInParent<PlayerIdentity>();
+                    string nombreAtacante = "";
+                    
+                    if (identidadAtacante != null && !string.IsNullOrEmpty(identidadAtacante.NombreIdentificador))
+                    {
+                        nombreAtacante = identidadAtacante.NombreIdentificador;
+                    }
+                    else
+                    {
+                        Unity.Netcode.NetworkObject netObjAtacante = characteristics.GetComponentInParent<Unity.Netcode.NetworkObject>();
+                        if (netObjAtacante != null) nombreAtacante = netObjAtacante.OwnerClientId.ToString();
+                    }
+                    
+                    if (string.IsNullOrEmpty(nombreVictima)) nombreVictima = "Desconocido";
+                    if (string.IsNullOrEmpty(nombreAtacante)) nombreAtacante = "Desconocido";
+
+                    Debug.Log($"<color=cyan>[PlayerImpactManager] -> ENVÍO DE IMPACTO: Atacante (ID Red: {nombreAtacante}) golpeó a Afectado (ID Red: {nombreVictima}). Redirigiendo a OwnerReceiver...</color>");
+
                     _ownerReceiver.EnviarImpactoFisicoALaRed(
                         characteristics.Damage,
                         characteristics.Knockback, 
@@ -41,25 +67,47 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions
                         tiempoAturdimiento,
                         forwardEnemigo,
                         upEnemigo,
-                        nombreVictima
+                        nombreVictima,
+                        nombreAtacante
                     );
                 }
             }
             else if (characteristics.Propiedad == HurtboxCharacteristics.PropiedadDaño.SinDueño)
             {
-                // Daño proveniente del entorno global (Lava, pinchos, eventos de mapa)
-                if (_environmentalReceiver != null)
+                if (_environmentalReceiver == null)
                 {
-                    _environmentalReceiver.EnviarImpactoAmbientalALaRed(
-                        characteristics.Damage,
-                        characteristics.Knockback, 
-                        characteristics.Inclinacion,
-                        characteristics.Direccion,
-                        tiempoAturdimiento,
-                        forwardEnemigo,
-                        upEnemigo
-                    );
+                    Debug.LogError($"<color=red>[PlayerImpactManager] -> ERROR: Se detectó daño SinDueño pero '_environmentalReceiver' es NULO en este objeto!</color>");
+                    return;
                 }
+
+
+                PlayerIdentity identidadAfectada = GetComponentInParent<PlayerIdentity>();
+                string nombreAfectado = "";
+                
+                if (identidadAfectada != null && !string.IsNullOrEmpty(identidadAfectada.NombreIdentificador))
+                {
+                    nombreAfectado = identidadAfectada.NombreIdentificador;
+                }
+                else
+                {
+                    Unity.Netcode.NetworkObject netObjAfectado = GetComponentInParent<Unity.Netcode.NetworkObject>();
+                    if (netObjAfectado != null) nombreAfectado = netObjAfectado.OwnerClientId.ToString();
+                }
+
+                if (string.IsNullOrEmpty(nombreAfectado)) nombreAfectado = "Desconocido";
+
+                Debug.Log($"<color=cyan>[PlayerImpactManager] -> ENVÍO AMBIENTAL: El entorno '{hurtboxGolpeada.name}' afectó a (ID Red: {nombreAfectado}). Redirigiendo a EnvironmentalReceiver...</color>");
+                
+                _environmentalReceiver.EnviarImpactoAmbientalALaRed(
+                    characteristics.Damage,
+                    characteristics.Knockback, 
+                    characteristics.Inclinacion,
+                    characteristics.Direccion,
+                    tiempoAturdimiento,
+                    forwardEnemigo,
+                    upEnemigo,
+                    nombreAfectado
+                );
             }
         }
     }

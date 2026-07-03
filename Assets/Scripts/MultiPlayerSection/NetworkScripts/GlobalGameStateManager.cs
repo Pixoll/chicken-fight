@@ -35,8 +35,6 @@ namespace MultiPlayerSection.NetworkScripts
 
         private void DispararArranqueDePartida()
         {
-            Debug.Log("<color=magenta>[MANAGER] Servidor listo. Invocando la sección de tiempo ahora.</color>");
-            
             if (TimeSection != null)
             {
                 TimeSection.IniciarCronometroMaestro();

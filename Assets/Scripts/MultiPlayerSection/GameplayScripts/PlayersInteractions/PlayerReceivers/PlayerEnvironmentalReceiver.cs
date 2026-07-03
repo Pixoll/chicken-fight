@@ -5,19 +5,16 @@ using UnityEngine;
 
 namespace MultiPlayerSection.GameplayScripts.PlayersInteractions.PlayerReceivers
 {
-    // Hereda de NetworkBehaviour para conocer la identidad local (IsOwner)
-    public class PlayerEnvironmentalReceiver : NetworkBehaviour 
+    public class PlayerEnvironmentalReceiver : NetworkBehaviour
     {
         private Rigidbody2D _rb;
         private PlayerMovement _playerMovement;
-        private PlayerIdentity _playerIdentity;
         private MatchInformationManager _matchManager;
 
         private void Awake()
         {
             Transform root = transform.root;
             _rb = root.GetComponent<Rigidbody2D>();
-            _playerIdentity = root.GetComponent<PlayerIdentity>();
             _playerMovement = root.GetComponentInChildren<PlayerMovement>();
         }
 
@@ -25,72 +22,73 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions.PlayerReceivers
         {
             _matchManager = FindFirstObjectByType<MatchInformationManager>();
         }
-
-        /// <summary>
-        /// Procesa impactos de fuentes globales (Escenario) sin un dueño jugador.
-        /// </summary>
+        
         public void EnviarImpactoAmbientalALaRed(
             float damage,
-            float force, 
+            float force,
             HurtboxCharacteristics.InclinacionVertical inclinacion,
             HurtboxCharacteristics.DireccionHorizontal direccion,
             float durationStun,
-            Vector2 direccionDerechaHurtbox,
-            Vector2 direccionArribaHurtbox)
+            Vector2 direccionDerechaEntorno,
+            Vector2 direccionArribaEntorno,
+            string nombreAfectado)
         {
-            // 🛡️ FILTRO CRÍTICO DE ESCENARIO: 
-            // Como la lava está en todas las pantallas, solo permito que este script actúe 
-            // si se está ejecutando en MI GALLINA PROPIA en este celular.
-            if (!IsOwner) return;
+            string miInstanciaDePantallaID = NetworkManager.Singleton.LocalClientId.ToString();
 
-            Debug.Log($"<color=orange>[ENVIRONMENTAL RECEIVER]</color> Mi gallina ({_playerIdentity.NombreIdentificador}) pisó un peligro ambiental. Daño: {damage}");
+            if (miInstanciaDePantallaID != nombreAfectado)
+            {
+                return;
+            }
 
-            // 1. Informamos al servidor para aplicar la pérdida de vida de forma legítima
-            SolicitarAplicarDanoAmbientalServerRpc(damage, _playerIdentity.NombreIdentificador.ToString());
+            Debug.Log($"<color=orange>[EnvironmentalReceiver] -> ¡Mi gallina ({miInstanciaDePantallaID}) pisó el entorno! Aplicando consecuencias locales e informando al servidor...</color>");
 
-            // 2. Aplicamos la reacción física local e inmediatamente la sincronizamos a los demás
-            EjecutarFisicaAmbiental(force, inclinacion, direccion, durationStun, direccionDerechaHurtbox, direccionArribaHurtbox);
-            PropagarFisicasAmbientalesRpc(force, inclinacion, direccion, durationStun, direccionDerechaHurtbox, direccionArribaHurtbox);
+            AplicarAturdimientoLocal(durationStun);
+            AplicarFuerzaDeEmpujeLocal(force, inclinacion, direccion, direccionDerechaEntorno, direccionArribaEntorno);
+
+            NotificarDañoAmbientalAlServidorServerRpc(damage, nombreAfectado);
         }
 
-        [ServerRpc]
-        private void SolicitarAplicarDanoAmbientalServerRpc(float damage, string nombreIdentificador)
+        [ServerRpc(RequireOwnership = false)]
+        private void NotificarDañoAmbientalAlServidorServerRpc(float damage, string nombreVictima)
         {
             if (_matchManager != null)
             {
-                _matchManager.ModificarVidaJugador(nombreIdentificador, -damage);
+                _matchManager.ModificarVidaJugador(nombreVictima, -damage);
             }
         }
 
-        [Rpc(SendTo.NotMe)]
-        private void PropagarFisicasAmbientalesRpc(float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion, float durationStun, Vector2 dirDerecha, Vector2 dirArriba)
+        private void AplicarAturdimientoLocal(float duracion)
         {
-            EjecutarFisicaAmbiental(force, inclinacion, direccion, durationStun, dirDerecha, dirArriba);
+            if (duracion <= 0f || _playerMovement == null) return;
+            _playerMovement.StunningTime(duracion);
+            Debug.Log($"<color=yellow>[STUN AMBIENTAL] -> Joystick inhabilitado por {duracion}s.</color>");
         }
 
-        private void EjecutarFisicaAmbiental(float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion, float durationStun, Vector2 dirDerecha, Vector2 dirArriba)
+        private void AplicarFuerzaDeEmpujeLocal(
+            float fuerza, 
+            HurtboxCharacteristics.InclinacionVertical inclinacion, 
+            HurtboxCharacteristics.DireccionHorizontal direccion, 
+            Vector2 dirDerecha, 
+            Vector2 dirArriba)
         {
             if (_rb == null) return;
 
-            if (durationStun > 0f && _playerMovement != null)
-            {
-                _playerMovement.StunningTime(durationStun);
-            }
+            Vector2 vectorResultado = Vector2.zero;
 
-            Vector2 vectorBase = Vector2.zero;
             switch (direccion)
             {
-                case HurtboxCharacteristics.DireccionHorizontal.Forward:   vectorBase = dirDerecha; break;
-                case HurtboxCharacteristics.DireccionHorizontal.Backward:  vectorBase = -dirDerecha; break;
-                case HurtboxCharacteristics.DireccionHorizontal.Up:        vectorBase = dirArriba; break;
-                case HurtboxCharacteristics.DireccionHorizontal.Down:      vectorBase = -dirArriba; break;
+                case HurtboxCharacteristics.DireccionHorizontal.Forward:   vectorResultado = dirDerecha; break;
+                case HurtboxCharacteristics.DireccionHorizontal.Backward:  vectorResultado = -dirDerecha; break;
+                case HurtboxCharacteristics.DireccionHorizontal.Up:        vectorResultado = dirArriba; break;
+                case HurtboxCharacteristics.DireccionHorizontal.Down:      vectorResultado = -dirArriba; break;
             }
 
-            if (inclinacion == HurtboxCharacteristics.InclinacionVertical.Top) vectorBase += Vector2.up;
-            else if (inclinacion == HurtboxCharacteristics.InclinacionVertical.Bottom) vectorBase += Vector2.down;
+            if (inclinacion == HurtboxCharacteristics.InclinacionVertical.Top) vectorResultado += Vector2.up;
+            else if (inclinacion == HurtboxCharacteristics.InclinacionVertical.Bottom) vectorResultado += Vector2.down;
 
             _rb.linearVelocity = Vector2.zero;
-            _rb.AddForce(vectorBase.normalized * force, ForceMode2D.Impulse);
+            _rb.AddForce(vectorResultado.normalized * fuerza, ForceMode2D.Impulse);
+            Debug.Log($"<color=magenta>[FÍSICA AMBIENTAL] -> Empujando gallina con fuerza: {fuerza} | Dirección: {vectorResultado.normalized}</color>");
         }
     }
 }

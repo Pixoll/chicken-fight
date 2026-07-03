@@ -8,7 +8,7 @@ using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace MainMenuSection.Core {
+namespace MainMenuSection {
     public class GameplayNetworkManager : MonoBehaviour {
         public static GameplayNetworkManager Instance { get; private set; }
 
@@ -25,26 +25,16 @@ namespace MainMenuSection.Core {
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
-
-            Debug.Log(
-                "<color=orange>[GameplayNetworkManager] Awake ejecutado. Instancia única creada con éxito.</color>");
         }
 
         private void Start() {
             if (NetworkManager.Singleton != null) {
                 _transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-
-                Debug.Log(
-                    "<color=orange>[GameplayNetworkManager] UnityTransport vinculado correctamente en el Start.</color>");
-            } else {
-                Debug.LogError(
-                    "[GameplayNetworkManager] ¡CRÍTICO: No se encontró el NetworkManager Singleton en la escena!");
             }
         }
 
         public void CreateHost() {
-            if (NetworkManager.Singleton == null || NetworkManager.Singleton.IsServer ||
-                NetworkManager.Singleton.IsClient) {
+            if (NetworkManager.Singleton == null || NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsClient) {
                 return;
             }
 
@@ -52,36 +42,30 @@ namespace MainMenuSection.Core {
                 _transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
             }
 
-            Debug.Log("<color=green>[GameplayNetworkManager] Iniciando Host...</color>");
-
+            // Suscribimos el evento de inicio del servidor para detectar al Host como jugador inicial
+            NetworkManager.Singleton.OnServerStarted += OnHostStartedLocal;
+            
             NetworkManager.Singleton.StartHost();
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
             IsPlayer1 = true;
 
-            // Usamos el método modificado que lee la IP fija
             string ipLocal = GetServerAddress();
             ushort puertoActual = GetCurrentPort();
-
-            Debug.Log(
-                "<color=cyan>[DEBUG RED - HOST CREADO]</color>\n"
-                + $"▶ IP Física Detectada en PC: {ipLocal}\n"
-                + $"▶ Puerto de Escucha: {puertoActual}\n"
-                + "▶ Estado: Suscrito a eventos de conexión esperando clientes externos..."
-            );
+            
+            Debug.Log($"<color=cyan>[GameplayNetworkManager] Intentando crear e iniciar un nuevo Host en {ipLocal}:{puertoActual}...</color>");
         }
 
         public void CloseConnection() {
             if (NetworkManager.Singleton == null) return;
-
             ushort puertoLiberado = GetCurrentPort();
 
+            Debug.Log("<color=red>[GameplayNetworkManager] Cerrando conexión y apagando instancias de red.</color>");
+
+            NetworkManager.Singleton.OnServerStarted -= OnHostStartedLocal;
             NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
             NetworkManager.Singleton.Shutdown();
-
-            Debug.Log(
-                $"<color=red>[DEBUG RED] Host Cerrado de forma voluntaria. Puerto {puertoLiberado} liberado.</color>");
         }
 
         private ushort GetCurrentPort() {
@@ -108,7 +92,6 @@ namespace MainMenuSection.Core {
             try {
                 return string.Concat(octets.Select(octet => byte.Parse(octet).ToString("X2")));
             } catch {
-                Debug.LogError($"[GameplayNetworkManager] Falló la codificación de los octetos: {octets}");
                 return "CÓDIGO_INVÁLIDO";
             }
         }
@@ -121,38 +104,26 @@ namespace MainMenuSection.Core {
         private static string HexToOctets(string hexCode) {
             try {
                 if (hexCode.Length % 2 != 0) {
-                    Debug.LogError("[GameplayNetworkManager] Código hex tiene longitud inválida");
                     return null;
                 }
 
                 string result = string.Join(".", Enumerable.Range(0, hexCode.Length / 2)
                     .Select(i => byte.Parse(hexCode.Substring(i * 2, 2), NumberStyles.HexNumber).ToString()));
 
-                Debug.Log($"<color=purple>[GameplayNetworkManager] Traduciendo Código '{hexCode}' -> Octetos: {result}</color>");
-
                 return result;
-            } catch (Exception ex) {
-                Debug.LogError($"[GameplayNetworkManager] Error fatal al decodificar Hex: {ex.Message}");
+            } catch {
                 return null;
             }
         }
 
         public void JoinHost(string hostIdCode) {
             if (NetworkManager.Singleton == null) {
-                Debug.LogError("[GameplayNetworkManager] No se puede conectar: NetworkManager.Singleton es NULL.");
                 return;
             }
 
-            Debug.Log(
-                $"<color=yellow>[GameplayNetworkManager] Solicitud de unión recibida. Código ingresado por el usuario: {hostIdCode}</color>");
-
             string ipWithoutLastOctets = string.Join(".", GetLocalIPv4().Split('.').SkipLast(2));
             string targetIp = string.Join(".", ipWithoutLastOctets, HexToOctets(hostIdCode.Trim()));
-
             if (string.IsNullOrEmpty(targetIp)) {
-                Debug.LogError(
-                    "[GameplayNetworkManager] Abortando JoinHost: La dirección IP recuperada está vacía o corrupta.");
-
                 return;
             }
 
@@ -162,66 +133,52 @@ namespace MainMenuSection.Core {
 
             if (_transport != null) {
                 _transport.SetConnectionData(targetIp, 7777);
-
-                Debug.Log(
-                    $"<color=yellow>[GameplayNetworkManager] Inyectando IP en UnityTransport. Address = {targetIp}, Port = {_transport.ConnectionData.Port}</color>");
-
-                // Nos suscribimos también en el cliente para ver si él mismo se entera de su éxito
                 NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
                 IsPlayer1 = false;
 
-                Debug.Log(
-                    "<color=orange>[GameplayNetworkManager] Lanzando NetworkManager.Singleton.StartClient()...</color>");
-
-                bool clienteLanzado = NetworkManager.Singleton.StartClient();
-                Debug.Log($"[GameplayNetworkManager] Resultado de StartClient(): {clienteLanzado}");
-            } else {
-                Debug.LogError(
-                    "[GameplayNetworkManager] No se pudo configurar la IP porque UnityTransport es NULL en el NetworkManager.");
+                NetworkManager.Singleton.StartClient();
             }
         }
 
         public Action<ulong> OnPlayerJoined;
 
-        // private void OnClientConnected(ulong clientId) {
-        //     // Este log se imprimirá SI O SI si la red conecta, sin importar si eres host o cliente
-        //     Debug.Log(
-        //         $"<color=magenta>=========== [ALERTA NATIVA NETCODE] OnClientConnected disparado para ID: {clientId} ===========</color>");
-        //
-        //     Debug.Log($"[INFO] LocalClientId de esta instancia actual es: {NetworkManager.Singleton.LocalClientId}");
-        //
-        //     if (clientId != NetworkManager.Singleton.LocalClientId) {
-        //         Debug.Log(
-        //             $"<color=green>[GameplayNetworkManager] ¡ÉXITO! Un cliente real (ID externo: {clientId}) superó el handshake de red y entró al Host.</color>");
-        //
-        //         OnPlayerJoined?.Invoke(clientId);
-        //     } else {
-        //         Debug.Log(
-        //             "[GameplayNetworkManager] OnClientConnected detectó la autoconexión de la instancia local (Host conectándose a sí mismo). Ignorando para la UI externa.");
-        //     }
-        //
-        //     SceneManager.LoadScene("RoundMode");
-        // }
+        private void OnHostStartedLocal() {
+            // Desuscribimos inmediatamente para evitar ejecuciones repetidas involuntarias
+            NetworkManager.Singleton.OnServerStarted -= OnHostStartedLocal;
+            
+            // El Host local en Netcode siempre posee el LocalClientId (usualmente 0)
+            ulong hostId = NetworkManager.Singleton.LocalClientId;
+            ImprimirMensajeUnionJugador(hostId);
+        }
         
         private void OnClientConnected(ulong clientId) {
-            Debug.Log($"<color=magenta>=========== [ALERTA NATIVA] OnClientConnected ID: {clientId} ===========</color>");
+            // Este log se ejecutará localmente en cualquier instancia cuando se conecte con éxito
+            if (!NetworkManager.Singleton.IsServer) {
+                ImprimirMensajeUnionJugador(clientId);
+            }
 
             if (NetworkManager.Singleton.IsServer) {
                 if (clientId != NetworkManager.Singleton.LocalClientId) {
-                    Debug.Log($"<color=green>[GameplayNetworkManager] ¡Rival conectado! Cargando escena de pelea...</color>");
-            
+                    ImprimirMensajeUnionJugador(clientId);
                     OnPlayerJoined?.Invoke(clientId);
-
-                    // 🔍 ÚNICA RESPONSABILIDAD: Mover a todos los clientes a la escena de combate
                     NetworkManager.Singleton.SceneManager.LoadScene("RoundMode", LoadSceneMode.Single);
                 }
             }
         }
         
+        private void OnClientDisconnected(ulong clientId) { 
+        }
 
-        private void OnClientDisconnected(ulong clientId) {
-            Debug.Log(
-                $"<color=red>[GameplayNetworkManager] Callback nativo: El ID {clientId} se desconectó del servidor.</color>");
+        private void ImprimirMensajeUnionJugador(ulong nuevoClientId) {
+            string listaJugadores = "Ninguno";
+            
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.ConnectedClientsIds != null) {
+                // Obtenemos los IDs únicos de red de todos los jugadores actuales en el host
+                listaJugadores = string.Join(", ", NetworkManager.Singleton.ConnectedClientsIds.Select(id => $"[ID: {id}]"));
+            }
+
+            Debug.Log($"<color=green>[GameplayNetworkManager] Se ha unido un nuevo jugador (ID asignado: {nuevoClientId}). " +
+                      $"Jugadores actuales en el host: {listaJugadores}</color>");
         }
     }
 }

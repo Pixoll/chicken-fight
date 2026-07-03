@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using MultiPlayerSection.GameplayScripts.Objects;
 using MultiPlayerSection.PlayerScripts;
 using UnityEngine;
 
@@ -8,147 +7,61 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions
     public class PlayerHitbox : MonoBehaviour
     {
         private int _hurtboxLayer;
-        private int _objectBoxLayer;
-        
-        private Collider2D[] _myColliders;
         private Transform _myChickenRoot;
         private PlayerImpactManager _impactManager;
 
-        private struct TrackedInfo
-        {
-            public HurtboxCharacteristics characteristics;
-            public float expireTime;
+        private struct HurtboxRegistro {
+            public float tiempoExpiracionCooldown;
         }
 
-        private readonly Dictionary<Collider2D, TrackedInfo> _trackedHurtboxes = new Dictionary<Collider2D, TrackedInfo>();
+        private readonly Dictionary<Collider2D, HurtboxRegistro> _hurtboxesEnContacto = new Dictionary<Collider2D, HurtboxRegistro>();
 
-        private void Awake()
-        {
+        private void Awake() {
             _hurtboxLayer = LayerMask.NameToLayer("Hurtbox");
-            _objectBoxLayer = LayerMask.NameToLayer("ObjectBox");
-            
-            _myColliders = GetComponents<Collider2D>();
             _myChickenRoot = transform.root;
+            
             _impactManager = _myChickenRoot.GetComponentInChildren<PlayerImpactManager>();
         }
 
-        private void OnTriggerEnter2D(Collider2D collision)
-        {
-            if (collision.gameObject.layer == _hurtboxLayer)
-            {
-                if (collision.transform.root == _myChickenRoot) return;
+        private void OnTriggerEnter2D(Collider2D collision) {
+            EvaluarYProcesarImpacto(collision);
+        }
 
-                HurtboxCharacteristics characteristics = collision.GetComponent<HurtboxCharacteristics>();
-                if (characteristics == null) return;
+        private void OnTriggerStay2D(Collider2D collision) {
+            EvaluarYProcesarImpacto(collision);
+        }
 
-                if (IsImmuneTo(collision)) return;
-
-                RegisterImpact(collision, characteristics);
-        
-                if (_impactManager != null)
-                {
-                    // Le pasamos las características y la colisión al manager local del atacante
-                    _impactManager.ReceiveImpact(characteristics, collision.transform.right, collision.transform.up, collision.gameObject);
+        private void OnTriggerExit2D(Collider2D collision) {
+            if (collision.gameObject.layer == _hurtboxLayer) {
+                if (_hurtboxesEnContacto.ContainsKey(collision)) {
+                    _hurtboxesEnContacto.Remove(collision);
                 }
-                return;
-            }
-
-            if (collision.gameObject.layer == _objectBoxLayer)
-            {
-                ObjectBoxCharacteristics objectCharacteristics = collision.GetComponent<ObjectBoxCharacteristics>();
-                if (objectCharacteristics == null) return;
-
-                PlayerPunch playerPunch = _myChickenRoot.GetComponentInChildren<PlayerPunch>();
-
-                if (playerPunch != null)
-                {
-                    if (objectCharacteristics.NombreObjeto == "Espada")
-                    {
-                        playerPunch.ObjetoActual = PlayerPunch.TipoObjetoEquipado.Espada;
-                        Debug.Log($"[EQUIPAR] {gameObject.name} ha equipado: ESPADA");
-                    }
-                }
-
-                Destroy(collision.gameObject);
             }
         }
 
-        private void FixedUpdate()
-        {
-            EvaluateHurtboxExpirations();
-        }
+        private void EvaluarYProcesarImpacto(Collider2D collision) {
+            if (collision.gameObject.layer != _hurtboxLayer) return;
+            if (collision.transform.root == _myChickenRoot) return;
 
-        private bool IsImmuneTo(Collider2D hurtbox)
-        {
-            if (_trackedHurtboxes.TryGetValue(hurtbox, out TrackedInfo info))
-            {
-                return Time.time < info.expireTime;
-            }
-            return false;
-        }
+            HurtboxCharacteristics characteristics = collision.GetComponent<HurtboxCharacteristics>();
+            if (characteristics == null) return;
 
-        private void RegisterImpact(Collider2D hurtbox, HurtboxCharacteristics characteristics)
-        {
-            TrackedInfo info;
-            info.characteristics = characteristics;
-            info.expireTime = Time.time + characteristics.Cooldwon;
-            
-            _trackedHurtboxes[hurtbox] = info;
-        }
-
-        private void EvaluateHurtboxExpirations()
-        {
-            if (_trackedHurtboxes.Count == 0) return;
-
-            List<Collider2D> toRemove = new List<Collider2D>();
-            var keys = new List<Collider2D>(_trackedHurtboxes.Keys);
-
-            foreach (Collider2D hurtbox in keys)
-            {
-                if (!hurtbox || !hurtbox.gameObject.activeInHierarchy)
-                {
-                    toRemove.Add(hurtbox);
-                    continue;
-                }
-
-                bool isStillTouching = IsStillTouching(hurtbox);
-                
-                if (!isStillTouching)
-                {
-                    toRemove.Add(hurtbox);
-                    continue;
-                }
-
-                TrackedInfo info = _trackedHurtboxes[hurtbox];
-                bool cooldownEnded = Time.time >= info.expireTime;
-
-                if (cooldownEnded && isStillTouching)
-                {
-                    RegisterImpact(hurtbox, info.characteristics);
-                    
-                    if (_impactManager)
-                    {
-                        _impactManager.ReceiveImpact(info.characteristics, hurtbox.transform.right, hurtbox.transform.up, hurtbox.gameObject);
-                    }
-                }
+            if (_hurtboxesEnContacto.TryGetValue(collision, out HurtboxRegistro registro)) {
+                if (Time.time < registro.tiempoExpiracionCooldown) return; 
             }
 
-            foreach (Collider2D hurtbox in toRemove)
-            {
-                _trackedHurtboxes.Remove(hurtbox);
+            _hurtboxesEnContacto[collision] = new HurtboxRegistro {
+                tiempoExpiracionCooldown = Time.time + characteristics.Cooldwon
+            };
+
+            Debug.Log($"<color=lime>[PlayerHitbox] -> Trigger detectado y enviado al Manager. Hurtbox: {collision.gameObject.name}</color>");
+
+            if (_impactManager != null) {
+                _impactManager.ReceiveImpact(characteristics, collision.transform.right, collision.transform.up, collision.gameObject);
             }
-        }
-        
-        private bool IsStillTouching(Collider2D hurtbox)
-        {
-            foreach (Collider2D myCollider in _myColliders)
-            {
-                if (myCollider.IsTouching(hurtbox))
-                {
-                    return true;
-                }
+            else {
+                Debug.LogError($"<color=red>[ERROR CRÍTICO] -> ¡PlayerImpactManager NO ENCONTRADO en el prefab de la gallina!</color>");
             }
-            return false;
         }
     }
 }

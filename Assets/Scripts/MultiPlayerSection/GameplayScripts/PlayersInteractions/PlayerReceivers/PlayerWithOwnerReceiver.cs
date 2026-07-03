@@ -1,3 +1,4 @@
+using MultiPlayerSection.NetworkScripts;
 using MultiPlayerSection.PlayerScripts;
 using Unity.Netcode;
 using UnityEngine;
@@ -6,17 +7,22 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions.PlayerReceivers
 {
     public class PlayerWithOwnerReceiver : NetworkBehaviour 
     {
-        private PlayerIdentity _playerIdentity;
+        private Rigidbody2D _rb;
+        private PlayerMovement _playerMovement;
+        private MatchInformationManager _matchManager;
 
         private void Awake()
         {
-            // Obtenemos la identidad de la gallina dueña de este script
-            _playerIdentity = transform.root.GetComponent<PlayerIdentity>();
+            Transform root = transform.root;
+            _rb = root.GetComponent<Rigidbody2D>();
+            _playerMovement = root.GetComponentInChildren<PlayerMovement>();
         }
 
-        /// <summary>
-        /// Invocado localmente en la pantalla donde se detectó el choque físico de la Hitbox.
-        /// </summary>
+        private void Start()
+        {
+            _matchManager = FindFirstObjectByType<MatchInformationManager>();
+        }
+        
         public void EnviarImpactoFisicoALaRed(
             float damage,
             float force, 
@@ -25,86 +31,88 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions.PlayerReceivers
             float durationStun,
             Vector2 direccionDerechaEnemigo,
             Vector2 direccionArribaEnemigo,
-            string nombreVictima)
+            string nombreVictima,
+            string nombreAtacante)
         {
-            // 🐔 Identificamos quién está ENVIANDO el golpe en esta pantalla local
-            string miNombreAtacante = _playerIdentity != null ? _playerIdentity.NombreIdentificador : "Desconocido";
+            string miInstanciaDePantallaID = NetworkManager.Singleton.LocalClientId.ToString();
 
-            Debug.Log($"<color=#00FFFF><b>[PASO 1 - PANTALLA LOCAL]</b></color>\n" +
-                      $"🔹 <b>Atacante (Emisor):</b> {miNombreAtacante}\n" +
-                      $"🎯 <b>Víctima (Objetivo):</b> {nombreVictima}\n" +
-                      $"📋 <b>Detalles Hurtbox:</b> Daño: {damage} | Fuerza: {force} | Stun: {durationStun}s\n" +
-                      $"📐 <b>Dirección H:</b> {direccion} | Inclinación V: {inclinacion}\n" +
-                      $"🚀 Enviando petición al Servidor por ServerRpc...");
+            if (miInstanciaDePantallaID != nombreAtacante) 
+            {
+                return; 
+            }
 
-            // Enviamos los datos al Servidor para ver si la señal llega al backend
+            Debug.Log($"<color=orange>[OWNER RECEIVER] -> Fase 1 Aprobada en Pantalla ({miInstanciaDePantallaID}). Esta copia de objeto envía ServerRpc porque coincide con el atacante real ({nombreAtacante}).</color>");
+
             SolicitarProcesarImpactoEnServidorServerRpc(
-                damage, 
-                force, 
-                inclinacion, 
-                direccion, 
-                durationStun, 
-                direccionDerechaEnemigo, 
-                direccionArribaEnemigo,
-                nombreVictima,
-                miNombreAtacante
+                damage, force, inclinacion, direccion, durationStun, direccionDerechaEnemigo, direccionArribaEnemigo, nombreVictima, nombreAtacante
             );
         }
 
         [ServerRpc(RequireOwnership = false)]
         private void SolicitarProcesarImpactoEnServidorServerRpc(
-            float damage,
-            float force, 
-            HurtboxCharacteristics.InclinacionVertical inclinacion,
-            HurtboxCharacteristics.DireccionHorizontal direccion,
-            float durationStun,
-            Vector2 dirDerecha, 
-            Vector2 dirArriba,
-            string nombreVictima,
-            string nombreAtacanteOriginal)
+            float damage, float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion, float durationStun, Vector2 dirDerecha, Vector2 dirArriba, string nombreVictima, string nombreAtacante)
         {
-            // 🖥️ --- ESTE BLOQUE SOLO SE EJECUTA EN EL HOST/SERVIDOR ---
-            
-            Debug.Log($"<color=#FFFF00><b>[PASO 2 - SEÑAL EN SERVIDOR]</b></color>\n" +
-                      $"⚡ El Servidor recibió la orden correctamente.\n" +
-                      $"⚔️ <b>Atacante reportado:</b> {nombreAtacanteOriginal}\n" +
-                      $"🛡️ <b>Víctima reportada:</b> {nombreVictima}\n" +
-                      $"📊 <b>Datos validados:</b> Daño a aplicar: {damage} HP | Fuerza: {force}\n" +
-                      $"📢 Distribuyendo a todas las pantallas mediante RPC global...");
+            if (_matchManager != null)
+            {
+                _matchManager.ModificarVidaJugador(nombreVictima, -damage);
+            }
 
-            // Replicamos el mensaje a todos los clientes para ver si la señal de vuelta es exitosa
             ProcesarFisicaDeGolpeEnClientesRpc(
-                force, 
-                inclinacion, 
-                direccion, 
-                durationStun, 
-                dirDerecha, 
-                dirArriba, 
-                nombreVictima, 
-                nombreAtacanteOriginal
+                force, inclinacion, direccion, durationStun, dirDerecha, dirArriba, nombreVictima, nombreAtacante
             );
         }
 
         [Rpc(SendTo.Everyone)]
         private void ProcesarFisicaDeGolpeEnClientesRpc(
-            float force, 
+            float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion, float durationStun, Vector2 dirDerecha, Vector2 dirArriba, string nombreVictima, string nombreAtacante)
+        {
+            string miInstanciaDePantallaID = NetworkManager.Singleton.LocalClientId.ToString();
+
+            if (miInstanciaDePantallaID == nombreVictima)
+            {
+                Debug.Log($"<color=red>[RECEIVER] -> Validación exitosa en pantalla ({miInstanciaDePantallaID}). Derivando a labores modulares.</color>");
+
+                AplicarAturdimientoLocal(durationStun);
+
+                AplicarFuerzaDeEmpujeLocal(force, inclinacion, direccion, dirDerecha, dirArriba);
+            }
+        }
+
+        private void AplicarAturdimientoLocal(float duracion)
+        {
+            if (duracion <= 0f || _playerMovement == null) return;
+
+            _playerMovement.StunningTime(duracion);
+            
+            Debug.Log($"<color=yellow>[STUN MODULAR] -> Joystick inhabilitado por {duracion}s. El oponente no puede moverse voluntariamente.</color>");
+        }
+
+        private void AplicarFuerzaDeEmpujeLocal(
+            float fuerza, 
             HurtboxCharacteristics.InclinacionVertical inclinacion, 
             HurtboxCharacteristics.DireccionHorizontal direccion, 
-            float durationStun, 
             Vector2 dirDerecha, 
-            Vector2 dirArriba,
-            string nombreVictima,
-            string nombreAtacanteOriginal)
+            Vector2 dirArriba)
         {
-            // 👥 --- ESTE BLOQUE SE EJECUTA EN TODAS LAS PANTALLAS (CLIENTES Y HOST) ---
-            
-            // Cada réplica de gallina en la escena evaluará este Log
-            string miIdentidadLocal = _playerIdentity != null ? _playerIdentity.NombreIdentificador : "Desconocido";
+            if (_rb == null) return;
 
-            Debug.Log($"<color=#FF00FF><b>[PASO 3 - RECEPCIÓN GLOBAL RPC]</b></color>\n" +
-                      $"🖥️ <b>Yo soy la entidad:</b> {miIdentidadLocal}\n" +
-                      $"📣 <b>Anuncio de red:</b> {nombreAtacanteOriginal} golpeó a {nombreVictima}.\n" +
-                      $"❓ <b>¿Me corresponde reaccionar?:</b> {(miIdentidadLocal == nombreVictima ? "<color=green><b>SÍ (Soy la Víctima)</b></color>" : "<color=red>No (Ignorar)</color>")}");
+            Vector2 vectorResultado = Vector2.zero;
+
+            switch (direccion)
+            {
+                case HurtboxCharacteristics.DireccionHorizontal.Forward:   vectorResultado = dirDerecha; break;
+                case HurtboxCharacteristics.DireccionHorizontal.Backward:  vectorResultado = -dirDerecha; break;
+                case HurtboxCharacteristics.DireccionHorizontal.Up:        vectorResultado = dirArriba; break;
+                case HurtboxCharacteristics.DireccionHorizontal.Down:      vectorResultado = -dirArriba; break; 
+            }
+
+            if (inclinacion == HurtboxCharacteristics.InclinacionVertical.Top) vectorResultado += Vector2.up;
+            else if (inclinacion == HurtboxCharacteristics.InclinacionVertical.Bottom) vectorResultado += Vector2.down;
+
+            _rb.linearVelocity = Vector2.zero;
+            _rb.AddForce(vectorResultado.normalized * fuerza, ForceMode2D.Impulse);
+    
+            Debug.Log($"<color=magenta>[FÍSICA MODULAR] -> Empujando a la gallina afectada con fuerza: {fuerza} | Dirección: {vectorResultado.normalized}</color>");
         }
     }
 }
