@@ -12,6 +12,7 @@ namespace MainMenuSection.MenuScripts {
         [SerializeField] private GameObject multiplayerLobbySection;
         [SerializeField] private GameObject multiplayerJoinLobbySection;
         [SerializeField] private GameObject preferencesSection;
+        [SerializeField] private GameObject creditsSection;
 
         [Header("Multiplayer UI Elements")] [SerializeField]
         private TMP_Text hostCodeText;
@@ -26,7 +27,7 @@ namespace MainMenuSection.MenuScripts {
         [SerializeField] private GameObject waitingHostText;
 
         private void Start() {
-            OpenMainmenuSection();
+            OpenMainMenuSection();
         }
 
         public void OpenSingleplayerMenu() {
@@ -34,6 +35,7 @@ namespace MainMenuSection.MenuScripts {
             singleplayerSection.SetActive(true);
             multiplayerSection.SetActive(false);
             preferencesSection.SetActive(false);
+            creditsSection.SetActive(false);
         }
 
         public void OpenMultiplayerMenu() {
@@ -41,6 +43,7 @@ namespace MainMenuSection.MenuScripts {
             singleplayerSection.SetActive(false);
             multiplayerSection.SetActive(true);
             preferencesSection.SetActive(false);
+            creditsSection.SetActive(false);
             OpenMultiplayerOptionsMenu();
         }
 
@@ -119,13 +122,23 @@ namespace MainMenuSection.MenuScripts {
             singleplayerSection.SetActive(false);
             multiplayerSection.SetActive(false);
             preferencesSection.SetActive(true);
+            creditsSection.SetActive(false);
         }
 
-        public void OpenMainmenuSection() {
+        public void OpenMainMenuSection() {
             mainSection.SetActive(true);
             singleplayerSection.SetActive(false);
             multiplayerSection.SetActive(false);
             preferencesSection.SetActive(false);
+            creditsSection.SetActive(false);
+        }
+
+        public void OpenCreditsSection() {
+            mainSection.SetActive(false);
+            singleplayerSection.SetActive(false);
+            multiplayerSection.SetActive(false);
+            preferencesSection.SetActive(false);
+            creditsSection.SetActive(true);
         }
     }
 }
