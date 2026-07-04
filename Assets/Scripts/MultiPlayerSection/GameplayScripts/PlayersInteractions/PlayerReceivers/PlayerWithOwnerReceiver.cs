@@ -24,80 +24,74 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions.PlayerReceivers
         }
         
         public void EnviarImpactoFisicoALaRed(
-            float damage,
-            float force, 
-            HurtboxCharacteristics.InclinacionVertical inclinacion,
-            HurtboxCharacteristics.DireccionHorizontal direccion,
-            float durationStun,
-            Vector2 direccionDerechaEnemigo,
-            Vector2 direccionArribaEnemigo,
-            string nombreVictima,
-            string nombreAtacante)
+            float damage, float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion,
+            float durationStun, Vector2 direccionDerechaEnemigo, Vector2 direccionArribaEnemigo, string nombreVictima, string nombreAtacante,
+            float heal, bool appliesSlow, float slowIntensity, float slowDuration)
         {
             string miInstanciaDePantallaID = NetworkManager.Singleton.LocalClientId.ToString();
 
-            if (miInstanciaDePantallaID != nombreAtacante) 
-            {
-                return; 
-            }
-
-            Debug.Log($"<color=orange>[OWNER RECEIVER] -> Fase 1 Aprobada en Pantalla ({miInstanciaDePantallaID}). Esta copia de objeto envía ServerRpc porque coincide con el atacante real ({nombreAtacante}).</color>");
+            if (miInstanciaDePantallaID != nombreAtacante) return; 
 
             SolicitarProcesarImpactoEnServidorServerRpc(
-                damage, force, inclinacion, direccion, durationStun, direccionDerechaEnemigo, direccionArribaEnemigo, nombreVictima, nombreAtacante
+                damage, force, inclinacion, direccion, durationStun, direccionDerechaEnemigo, direccionArribaEnemigo, nombreVictima, nombreAtacante,
+                heal, appliesSlow, slowIntensity, slowDuration
             );
         }
 
         [ServerRpc(RequireOwnership = false)]
         private void SolicitarProcesarImpactoEnServidorServerRpc(
-            float damage, float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion, float durationStun, Vector2 dirDerecha, Vector2 dirArriba, string nombreVictima, string nombreAtacante)
+            float damage, float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion,
+            float durationStun, Vector2 dirDerecha, Vector2 dirArriba, string nombreVictima, string nombreAtacante,
+            float heal, bool appliesSlow, float slowIntensity, float slowDuration)
         {
             if (_matchManager != null)
             {
                 _matchManager.ModificarVidaJugador(nombreVictima, -damage);
+
+                if (heal > 0f)
+                {
+                    _matchManager.ModificarVidaJugador(nombreAtacante, heal);
+                    Debug.Log($"<color=green>[SERVER] -> Sanando al atacante ({nombreAtacante}) por +{heal} puntos.</color>");
+                }
             }
 
             ProcesarFisicaDeGolpeEnClientesRpc(
-                force, inclinacion, direccion, durationStun, dirDerecha, dirArriba, nombreVictima, nombreAtacante
+                force, inclinacion, direccion, durationStun, dirDerecha, dirArriba, nombreVictima, nombreAtacante,
+                appliesSlow, slowIntensity, slowDuration
             );
         }
 
         [Rpc(SendTo.Everyone)]
         private void ProcesarFisicaDeGolpeEnClientesRpc(
-            float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion, float durationStun, Vector2 dirDerecha, Vector2 dirArriba, string nombreVictima, string nombreAtacante)
+            float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion,
+            float durationStun, Vector2 dirDerecha, Vector2 dirArriba, string nombreVictima, string nombreAtacante,
+            bool appliesSlow, float slowIntensity, float slowDuration)
         {
             string miInstanciaDePantallaID = NetworkManager.Singleton.LocalClientId.ToString();
 
             if (miInstanciaDePantallaID == nombreVictima)
             {
-                Debug.Log($"<color=red>[RECEIVER] -> Validación exitosa en pantalla ({miInstanciaDePantallaID}). Derivando a labores modulares.</color>");
-
                 AplicarAturdimientoLocal(durationStun);
-
                 AplicarFuerzaDeEmpujeLocal(force, inclinacion, direccion, dirDerecha, dirArriba);
+
+                if (appliesSlow && _playerMovement != null)
+                {
+                    _playerMovement.AplicarRalentizacionLocal(slowIntensity, slowDuration);
+                }
             }
         }
 
         private void AplicarAturdimientoLocal(float duracion)
         {
             if (duracion <= 0f || _playerMovement == null) return;
-
             _playerMovement.StunningTime(duracion);
-            
-            Debug.Log($"<color=yellow>[STUN MODULAR] -> Joystick inhabilitado por {duracion}s. El oponente no puede moverse voluntariamente.</color>");
         }
 
-        private void AplicarFuerzaDeEmpujeLocal(
-            float fuerza, 
-            HurtboxCharacteristics.InclinacionVertical inclinacion, 
-            HurtboxCharacteristics.DireccionHorizontal direccion, 
-            Vector2 dirDerecha, 
-            Vector2 dirArriba)
+        private void AplicarFuerzaDeEmpujeLocal(float fuerza, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion, Vector2 dirDerecha, Vector2 dirArriba)
         {
-            if (_rb == null) return;
+            if (_rb == null || fuerza <= 0f) return;
 
             Vector2 vectorResultado = Vector2.zero;
-
             switch (direccion)
             {
                 case HurtboxCharacteristics.DireccionHorizontal.Forward:   vectorResultado = dirDerecha; break;
@@ -111,8 +105,6 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions.PlayerReceivers
 
             _rb.linearVelocity = Vector2.zero;
             _rb.AddForce(vectorResultado.normalized * fuerza, ForceMode2D.Impulse);
-    
-            Debug.Log($"<color=magenta>[FÍSICA MODULAR] -> Empujando a la gallina afectada con fuerza: {fuerza} | Dirección: {vectorResultado.normalized}</color>");
         }
     }
 }

@@ -1,37 +1,89 @@
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using TMPro;
 
-namespace MultiPlayerSection.GameplayScripts.GlobalGameState
+namespace MultiPlayerSection.CoreState
 {
     public class GameUIEventSection : NetworkBehaviour
     {
-        [Header("UI Elements")]
-        [SerializeField] private GameObject panelCartelGlobal;
+        [Header("Contenedor de UI Principal")]
+        [SerializeField] private Transform canvasRaizDeLaPartida;
 
-        private void Awake()
+        [Header("Configuración Cortina de Carga")]
+        [SerializeField] private GameObject prefabCortinaCarga;
+        [SerializeField] private float duracionCortinaCarga = 3f;
+        private GameObject _instanciaCortinaActual;
+
+        [Header("Configuración Aviso Inicio Round")]
+        [SerializeField] private GameObject prefabAvisoInicioRound;
+        [SerializeField] private float duracionAvisoInicioRound = 2f;
+        private GameObject _instanciaAvisoInicioActual;
+
+        [Header("Configuración Aviso Fin Round")]
+        [SerializeField] private GameObject prefabAvisoFinRound;
+        [SerializeField] private float duracionAvisoFinRound = 2f;
+        private GameObject _instanciaAvisoFinActual;
+
+        public float DuracionCortinaCarga => duracionCortinaCarga;
+
+        public void MostrarCortinaCarga()
         {
-            if (panelCartelGlobal != null) panelCartelGlobal.SetActive(false);
+            if (!IsServer) return;
+            SolicitarCortinaCargaRpc();
+        }
+
+        public void MostrarAvisoInicioRound(string textoRound)
+        {
+            if (!IsServer) return;
+            SolicitarAvisoInicioRoundRpc(textoRound);
+        }
+
+        public void MostrarAvisoFinRound(string textoGanador)
+        {
+            if (!IsServer) return;
+            SolicitarAvisoFinRoundRpc(textoGanador);
         }
         
-        public void EnviarCartelGlobal(string mensaje, float duracion)
+        [Rpc(SendTo.Everyone)]
+        private void SolicitarCortinaCargaRpc()
         {
-            MostrarCartelEnTodasLasPantallasRpc(mensaje, duracion);
+            if (canvasRaizDeLaPartida == null || prefabCortinaCarga == null) return;
+
+            if (_instanciaCortinaActual != null) Destroy(_instanciaCortinaActual);
+
+            _instanciaCortinaActual = Instantiate(prefabCortinaCarga, canvasRaizDeLaPartida);
+            Destroy(_instanciaCortinaActual, duracionCortinaCarga);
         }
 
         [Rpc(SendTo.Everyone)]
-        private void MostrarCartelEnTodasLasPantallasRpc(string mensaje, float duracion)
+        private void SolicitarAvisoInicioRoundRpc(string textoRound)
         {
-            if (panelCartelGlobal == null) return;
+            if (canvasRaizDeLaPartida == null || prefabAvisoInicioRound == null) return;
 
-            panelCartelGlobal.SetActive(true);
+            if (_instanciaAvisoInicioActual != null) Destroy(_instanciaAvisoInicioActual);
 
-            CancelInvoke(nameof(OcultarCartel));
-            Invoke(nameof(OcultarCartel), duracion);
+            _instanciaAvisoInicioActual = Instantiate(prefabAvisoInicioRound, canvasRaizDeLaPartida);
+            
+            var tmp = _instanciaAvisoInicioActual.GetComponentInChildren<TextMeshProUGUI>();
+            if (tmp != null) tmp.text = textoRound;
+
+            Destroy(_instanciaAvisoInicioActual, duracionAvisoInicioRound);
         }
 
-        private void OcultarCartel()
+        [Rpc(SendTo.Everyone)]
+        private void SolicitarAvisoFinRoundRpc(string textoGanador)
         {
-            if (panelCartelGlobal != null) panelCartelGlobal.SetActive(false);
+            if (canvasRaizDeLaPartida == null || prefabAvisoFinRound == null) return;
+
+            if (_instanciaAvisoFinActual != null) Destroy(_instanciaAvisoFinActual);
+
+            _instanciaAvisoFinActual = Instantiate(prefabAvisoFinRound, canvasRaizDeLaPartida);
+
+            var tmp = _instanciaAvisoFinActual.GetComponentInChildren<TextMeshProUGUI>();
+            if (tmp != null) tmp.text = textoGanador;
+
+            Destroy(_instanciaAvisoFinActual, duracionAvisoFinRound);
         }
     }
 }

@@ -646,7 +646,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6378c5ee48621384c9c2481d8fdda3e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameplayScripts.PlayerImpactsSection.HurtboxCharacteristics
-  impactType: 0
   propiedadOrigen: 0
   inclinacion: 0
   direccion: 1
@@ -655,6 +654,10 @@ MonoBehaviour:
   damageCooldown: 1
   stunning: 1
   stunningTime: 0.5
+  healAmount: 0
+  appliesSlow: 0
+  slowIntensity: 0.5
+  slowDuration: 0
 --- !u!1 &6483338844018051988
 GameObject:
   m_ObjectHideFlags: 0
@@ -748,7 +751,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6378c5ee48621384c9c2481d8fdda3e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameplayScripts.PlayerImpactsSection.HurtboxCharacteristics
-  impactType: 0
   propiedadOrigen: 0
   inclinacion: 0
   direccion: 1
@@ -757,6 +759,10 @@ MonoBehaviour:
   damageCooldown: 3
   stunning: 1
   stunningTime: 0.5
+  healAmount: 0
+  appliesSlow: 0
+  slowIntensity: 0.5
+  slowDuration: 0
 --- !u!114 &6747683253719959521
 MonoBehaviour:
   m_ObjectHideFlags: 0

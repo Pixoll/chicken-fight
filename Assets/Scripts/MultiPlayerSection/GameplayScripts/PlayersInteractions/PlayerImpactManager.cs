@@ -32,9 +32,7 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions
                     string nombreVictima = "";
                     
                     if (identidadVictima != null && !string.IsNullOrEmpty(identidadVictima.NombreIdentificador))
-                    {
                         nombreVictima = identidadVictima.NombreIdentificador;
-                    }
                     else
                     {
                         Unity.Netcode.NetworkObject netObjVictima = GetComponentInParent<Unity.Netcode.NetworkObject>();
@@ -45,9 +43,7 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions
                     string nombreAtacante = "";
                     
                     if (identidadAtacante != null && !string.IsNullOrEmpty(identidadAtacante.NombreIdentificador))
-                    {
                         nombreAtacante = identidadAtacante.NombreIdentificador;
-                    }
                     else
                     {
                         Unity.Netcode.NetworkObject netObjAtacante = characteristics.GetComponentInParent<Unity.Netcode.NetworkObject>();
@@ -56,8 +52,6 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions
                     
                     if (string.IsNullOrEmpty(nombreVictima)) nombreVictima = "Desconocido";
                     if (string.IsNullOrEmpty(nombreAtacante)) nombreAtacante = "Desconocido";
-
-                    Debug.Log($"<color=cyan>[PlayerImpactManager] -> ENVÍO DE IMPACTO: Atacante (ID Red: {nombreAtacante}) golpeó a Afectado (ID Red: {nombreVictima}). Redirigiendo a OwnerReceiver...</color>");
 
                     _ownerReceiver.EnviarImpactoFisicoALaRed(
                         characteristics.Damage,
@@ -68,26 +62,23 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions
                         forwardEnemigo,
                         upEnemigo,
                         nombreVictima,
-                        nombreAtacante
+                        nombreAtacante,
+                        characteristics.Heal, 
+                        characteristics.AppliesSlow,
+                        characteristics.SlowIntensity,
+                        characteristics.SlowDuration 
                     );
                 }
             }
             else if (characteristics.Propiedad == HurtboxCharacteristics.PropiedadDaño.SinDueño)
             {
-                if (_environmentalReceiver == null)
-                {
-                    Debug.LogError($"<color=red>[PlayerImpactManager] -> ERROR: Se detectó daño SinDueño pero '_environmentalReceiver' es NULO en este objeto!</color>");
-                    return;
-                }
-
+                if (_environmentalReceiver == null) return;
 
                 PlayerIdentity identidadAfectada = GetComponentInParent<PlayerIdentity>();
                 string nombreAfectado = "";
                 
                 if (identidadAfectada != null && !string.IsNullOrEmpty(identidadAfectada.NombreIdentificador))
-                {
                     nombreAfectado = identidadAfectada.NombreIdentificador;
-                }
                 else
                 {
                     Unity.Netcode.NetworkObject netObjAfectado = GetComponentInParent<Unity.Netcode.NetworkObject>();
@@ -96,8 +87,6 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions
 
                 if (string.IsNullOrEmpty(nombreAfectado)) nombreAfectado = "Desconocido";
 
-                Debug.Log($"<color=cyan>[PlayerImpactManager] -> ENVÍO AMBIENTAL: El entorno '{hurtboxGolpeada.name}' afectó a (ID Red: {nombreAfectado}). Redirigiendo a EnvironmentalReceiver...</color>");
-                
                 _environmentalReceiver.EnviarImpactoAmbientalALaRed(
                     characteristics.Damage,
                     characteristics.Knockback, 
@@ -106,7 +95,11 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions
                     tiempoAturdimiento,
                     forwardEnemigo,
                     upEnemigo,
-                    nombreAfectado
+                    nombreAfectado,
+                    characteristics.Heal,
+                    characteristics.AppliesSlow,
+                    characteristics.SlowIntensity,
+                    characteristics.SlowDuration 
                 );
             }
         }

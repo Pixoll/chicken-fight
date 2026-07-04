@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using MultiPlayerSection.GameplayScripts;
-using MultiPlayerSection.GameplayScripts.GlobalGameState;
 using MultiPlayerSection.PlayerScripts;
 using Unity.Netcode;
 using UnityEngine;
@@ -19,9 +18,6 @@ namespace MultiPlayerSection.NetworkScripts
         [SerializeField] private Transform puntoSpawnJugador0;
         [SerializeField] private Transform puntoSpawnJugador1;
 
-        [Header("Referencias Locales")]
-        [SerializeField] private GameTimeSection timeSection;
-
         private NetworkVariable<float> _vidaInicialGlobal = new NetworkVariable<float>(100f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         private NetworkList<PlayerData> _listaJugadores;
 
@@ -30,13 +26,11 @@ namespace MultiPlayerSection.NetworkScripts
         private Dictionary<ulong, GameObject> _referenciasGallinasInstanciadas = new Dictionary<ulong, GameObject>();
 
         public System.Action<NetworkListEvent<PlayerData>> AlModificarListaJugadores;
-
         private NetworkVariable<bool> _rondaComenzada = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         private void Awake()
         {
             _listaJugadores = new NetworkList<PlayerData>(null, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-            if (timeSection == null) timeSection = GetComponentInChildren<GameTimeSection>();
         }
 
         public override void OnNetworkSpawn()
@@ -45,8 +39,6 @@ namespace MultiPlayerSection.NetworkScripts
 
             if (IsServer)
             {
-                _vidaInicialGlobal.Value = vidaInicialPredeterminada;
-                _rondaComenzada.Value = false;
                 NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnTodasLasEscenasCargadas;
             }
         }
@@ -57,25 +49,19 @@ namespace MultiPlayerSection.NetworkScripts
 
             if (IsServer)
             {
-                StartCoroutine(FaseCreacionDeEscenaRoutine());
+                FuncionInicioPartida();
             }
         }
 
-        private IEnumerator FaseCreacionDeEscenaRoutine()
+        private void FuncionInicioPartida()
         {
-            if (!IsServer) yield break;
+            if (!IsServer) return;
 
+            Debug.Log("<color=green>[Match] -> Fase 1: FuncionInicioPartida. Seteando parámetros iniciales.</color>");
+            
+            _vidaInicialGlobal.Value = vidaInicialPredeterminada;
             _rondaComenzada.Value = false;
-
-            string logJugadoresUnidos = "[MatchInformationManager] Jugadores que entraron a la escena: ";
-            foreach (var cliente in NetworkManager.Singleton.ConnectedClientsList)
-            {
-                logJugadoresUnidos += $"[ID Cliente: {cliente.ClientId}] ";
-            }
-            Debug.Log($"<color=white>{logJugadoresUnidos}</color>");
-            Debug.Log("<color=yellow>[MatchInformationManager] Se inicia fase de creacion de scena. Configurando gallinas invisibles y reiniciando datos...</color>");
-
-            _rondaActual = 1;
+            _rondaActual = 0; 
             _puntosDeVictoriaPorCliente.Clear();
             _referenciasGallinasInstanciadas.Clear();
 
@@ -83,111 +69,172 @@ namespace MultiPlayerSection.NetworkScripts
             {
                 ulong idCliente = cliente.ClientId;
                 _puntosDeVictoriaPorCliente[idCliente] = 0; 
-
-                Vector3 posicionInicial = (idCliente == 0 && puntoSpawnJugador0 != null) ? puntoSpawnJugador0.position : 
-                    (puntoSpawnJugador1 != null) ? puntoSpawnJugador1.position : Vector3.zero;
-
-                GameObject nuevoPollo = Instantiate(chickenPrefab, posicionInicial, Quaternion.identity);
-                _referenciasGallinasInstanciadas[idCliente] = nuevoPollo;
-
-                string nombreOficial = idCliente.ToString();
-                
-                PlayerIdentity identidad = nuevoPollo.GetComponent<PlayerIdentity>();
-                if (identidad != null)
-                {
-                    identidad.NombreIdentificador = nombreOficial;
-                }
-
-                RegistrarNuevoJugador(nombreOficial);
-        
-                nuevoPollo.GetComponent<NetworkObject>().SpawnWithOwnership(idCliente);
+                RegistrarNuevoJugador(idCliente.ToString());
             }
 
-            yield return new WaitForSeconds(3.0f);
-
-            FaseInicioRound();
+            FuncionInicioRonda();
         }
 
-
-        public void FaseInicioRound()
+        public void FuncionInicioRonda()
         {
             if (!IsServer) return;
+            StartCoroutine(SecuenciaInicioRondaRoutine());
+        }
 
-            Debug.Log($"<color=orange>[MatchInformationManager] Se inicia la fase de inicio de round. Comenzando Ronda: {_rondaActual}. ¡Gallinas visibles!</color>");
+        private IEnumerator SecuenciaInicioRondaRoutine()
+        {
+            _rondaActual++;
+            Debug.Log($"<color=cyan>[Match] -> Fase 2: FuncionInicioRonda. Preparando ROUND {_rondaActual}.</color>");
 
-            _rondaComenzada.Value = true;
-
-            foreach (var item in _referenciasGallinasInstanciadas)
+            if (GlobalGameStateManager.Instance != null)
             {
-                ulong idCliente = item.Key;
-                GameObject gallina = item.Value;
-
-                if (gallina != null)
-                {
-                    Vector3 posicionSpawn = (idCliente == 0 && puntoSpawnJugador0 != null) ? puntoSpawnJugador0.position : 
-                                            (puntoSpawnJugador1 != null) ? puntoSpawnJugador1.position : Vector3.zero;
-                    
-                    gallina.transform.position = posicionSpawn;
-
-                    ConfigurarEstadoGallinaRpc(gallina.GetComponent<NetworkObject>(), true);
-
-                    string nombreBuscado = idCliente.ToString();
-                    RestablecerVidaSpecificaServidor(nombreBuscado, _vidaInicialGlobal.Value);
-                }
+                GlobalGameStateManager.Instance.LlamarCortinaCargaServer();
             }
 
-            foreach (var item in _referenciasGallinasInstanciadas)
-            {
-                GameObject gallina = item.Value;
-                if (gallina != null)
-                {
-                    PlayerIdentity identity = gallina.GetComponent<PlayerIdentity>();
-                    string nombreFisico = identity != null ? identity.NombreIdentificador : "Desconocido";
-                    
-                    float vidaActualFisica = 0f;
-                    for (int i = 0; i < _listaJugadores.Count; i++)
-                    {
-                        if (_listaJugadores[i].nombreJugador.ToString() == nombreFisico)
-                        {
-                            vidaActualFisica = _listaJugadores[i].vidaActual;
-                            break;
-                        }
-                    }
-                    Debug.Log($"<color=lime>[MatchInformationManager] Verificación Instancia Real -> PlayerIdentity: {nombreFisico} | Vida actual en Red: {vidaActualFisica}</color>");
-                }
-            }
+            yield return new WaitForSeconds(0.2f);
 
-            if (timeSection != null)
+            EjecutarRespawnerSeguro();
+
+            yield return new WaitForSeconds(2.8f);
+
+            if (GlobalGameStateManager.Instance != null)
             {
-                timeSection.IniciarCronometroMaestro();
+                GlobalGameStateManager.Instance.IniciarRondaServer($"ROUND {_rondaActual}");
             }
         }
 
-        public void FaseFinRound(string nombreGanadorRound)
+        public void FuncionFinRonda(string nombreGanadorRound)
         {
             if (!IsServer) return;
 
-            _rondaComenzada.Value = false;
+            _rondaComenzada.Value = false; 
+
+            Debug.Log($"<color=red>[Match] -> Fase 3: FuncionFinRonda. Deteniendo daño. Ganador: {nombreGanadorRound}.</color>");
+
+            if (GlobalGameStateManager.Instance != null)
+            {
+                GlobalGameStateManager.Instance.FinDeRondaServer($"GANADOR {nombreGanadorRound}");
+            }
 
             foreach (var cliente in NetworkManager.Singleton.ConnectedClientsList)
             {
-                string nombreEsperado = cliente.ClientId.ToString();
-                if (nombreEsperado == nombreGanadorRound)
+                RestablecerVidaSpecificaServidor(cliente.ClientId.ToString(), _vidaInicialGlobal.Value);
+            }
+
+            Invoke(nameof(FuncionInicioRonda), 3f);
+        }
+
+
+
+        private void EjecutarRespawnerSeguro()
+        {
+            if (!IsServer) return;
+
+            _rondaComenzada.Value = true;
+
+            foreach (var cliente in NetworkManager.Singleton.ConnectedClientsList)
+            {
+                ulong idCliente = cliente.ClientId;
+                Vector3 posicionSpawn = (idCliente == 0 && puntoSpawnJugador0 != null) ? puntoSpawnJugador0.position : 
+                                        (puntoSpawnJugador1 != null) ? puntoSpawnJugador1.position : Vector3.zero;
+
+                GameObject gallina;
+
+                if (!_referenciasGallinasInstanciadas.ContainsKey(idCliente) || _referenciasGallinasInstanciadas[idCliente] == null)
                 {
-                    _puntosDeVictoriaPorCliente[cliente.ClientId]++;
+                    gallina = Instantiate(chickenPrefab, posicionSpawn, Quaternion.identity);
+                    _referenciasGallinasInstanciadas[idCliente] = gallina;
+
+                    string nombreOficial = idCliente.ToString();
+                    PlayerIdentity identidad = gallina.GetComponent<PlayerIdentity>();
+                    if (identidad != null) identidad.NombreIdentificador = nombreOficial;
+
+                    if (gallina.TryGetComponent<NetworkObject>(out var netObjGallina))
+                    {
+                        netObjGallina.SpawnWithOwnership(idCliente);
+                    }
+                }
+                else
+                {
+                    gallina = _referenciasGallinasInstanciadas[idCliente];
+                }
+
+                PlayerMovement movement = gallina.GetComponentInChildren<PlayerMovement>();
+                if (movement != null)
+                {
+                    movement.TeletransportarGallina(posicionSpawn);
+                }
+                else
+                {
+                    gallina.transform.position = posicionSpawn;
+                }
+
+                RestablecerVidaSpecificaServidor(idCliente.ToString(), _vidaInicialGlobal.Value);
+                
+                if (gallina.TryGetComponent<NetworkObject>(out var netObjEstado))
+                {
+                    ConfigurarEstadoGallinaRpc(netObjEstado, true);
+                }
+            }
+        }
+        
+
+        [ServerRpc(RequireOwnership = false)]
+        private void ModificarVidaJugadorServerRpc(string nombreUnico, float cantidad)
+        {
+            if (!_rondaComenzada.Value) return;
+
+            int indexJugadorModificado = -1;
+
+            for (int i = 0; i < _listaJugadores.Count; i++)
+            {
+                if (_listaJugadores[i].nombreJugador.ToString() == nombreUnico)
+                {
+                    PlayerData datosModificados = _listaJugadores[i];
+                    float vidaAnterior = datosModificados.vidaActual;
+
+                    datosModificados.vidaActual += cantidad;
+
+                    if (datosModificados.vidaActual < 0f) datosModificados.vidaActual = 0f;
+                    if (datosModificados.vidaActual > _vidaInicialGlobal.Value) datosModificados.vidaActual = _vidaInicialGlobal.Value;
+
+                    _listaJugadores[i] = datosModificados; 
+                    indexJugadorModificado = i;
+
+                    Debug.Log($"<color=magenta>[Daño] -> Jugador {nombreUnico} recibió alteración de vida: ({cantidad}). HP Anterior: {vidaAnterior} -> HP Actual: {datosModificados.vidaActual}</color>");
                     break;
                 }
             }
 
-            _rondaActual++;
+            if (indexJugadorModificado != -1 && _listaJugadores[indexJugadorModificado].vidaActual <= 0f)
+            {
+                _rondaComenzada.Value = false;
 
-            if (_rondaActual <= maxRondasConfigurables)
-            {
-                FaseInicioRound();
-            }
-            else
-            {
-                Debug.Log("<color=red>[MatchInformationManager] Se ha alcanzado el límite de rondas. Fin de la partida.</color>");
+                ulong idGanador = 0;
+                string nombreGanador = "Nadie";
+
+                foreach (var cliente in NetworkManager.Singleton.ConnectedClientsList)
+                {
+                    if (cliente.ClientId.ToString() != nombreUnico)
+                    {
+                        idGanador = cliente.ClientId;
+                        nombreGanador = idGanador.ToString();
+                        break;
+                    }
+                }
+
+                if (_puntosDeVictoriaPorCliente.ContainsKey(idGanador))
+                {
+                    _puntosDeVictoriaPorCliente[idGanador]++;
+                }
+                else
+                {
+                    _puntosDeVictoriaPorCliente[idGanador] = 1;
+                }
+
+                Debug.Log($"<color=red>[Match] -> ¡Muerte detectada! Jugador {nombreUnico} cae a 0 HP. Ganador del Round: {nombreGanador}. Saltando a FaseFinRonda.</color>");
+
+                FuncionFinRonda(nombreGanador);
             }
         }
 
@@ -205,25 +252,11 @@ namespace MultiPlayerSection.NetworkScripts
                 Rigidbody2D rb = netObject.GetComponent<Rigidbody2D>();
                 if (rb != null)
                 {
-                    if (activaParaJugar)
-                    {
-                        rb.bodyType = RigidbodyType2D.Dynamic;
-                        rb.linearVelocity = Vector2.zero;
-                        rb.angularVelocity = 0f;
-                    }
-                    else
-                    {
-                        rb.bodyType = RigidbodyType2D.Kinematic;
-                        rb.linearVelocity = Vector2.zero;
-                        rb.angularVelocity = 0f;
-                    }
+                    rb.linearVelocity = Vector2.zero;
+                    rb.angularVelocity = 0f;
+                    rb.bodyType = activaParaJugar ? RigidbodyType2D.Dynamic : RigidbodyType2D.Kinematic;
                 }
             }
-        }
-
-        public bool EstaLaRondaActiva()
-        {
-            return _rondaComenzada.Value;
         }
 
         private void RestablecerVidaSpecificaServidor(string nombreUnico, float vidaSincronizada)
@@ -249,35 +282,15 @@ namespace MultiPlayerSection.NetworkScripts
         
         public void ModificarVidaJugador(string nombreUnico, float cantidad)
         {
+            if (!IsServer) return;
             ModificarVidaJugadorServerRpc(nombreUnico, cantidad);
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        private void ModificarVidaJugadorServerRpc(string nombreUnico, float cantidad)
-        {
-            for (int i = 0; i < _listaJugadores.Count; i++)
-            {
-                if (_listaJugadores[i].nombreJugador.ToString() == nombreUnico)
-                {
-                    PlayerData datosModificados = _listaJugadores[i];
-                    datosModificados.vidaActual += cantidad;
-
-                    if (datosModificados.vidaActual < 0f) datosModificados.vidaActual = 0f;
-                    if (datosModificados.vidaActual > _vidaInicialGlobal.Value) datosModificados.vidaActual = _vidaInicialGlobal.Value;
-
-                    _listaJugadores[i] = datosModificados; 
-
-                    if (datosModificados.vidaActual <= 0f)
-                    {
-                        string nombreGanador = (nombreUnico == "0") ? "1" : "0";
-                        FaseFinRound(nombreGanador);
-                    }
-                    break;
-                }
-            }
-        }
-
+        public bool EstaLaRondaActiva() { return _rondaComenzada.Value; }
         private void OnListaJugadoresModificada(NetworkListEvent<PlayerData> changeEvent) { AlModificarListaJugadores?.Invoke(changeEvent); }
         public override void OnNetworkDespawn() { _listaJugadores.OnListChanged -= OnListaJugadoresModificada; }
+        
+        public int RondaActual => _rondaActual;
+        public NetworkList<PlayerData> ListaJugadores => _listaJugadores;
     }
 }

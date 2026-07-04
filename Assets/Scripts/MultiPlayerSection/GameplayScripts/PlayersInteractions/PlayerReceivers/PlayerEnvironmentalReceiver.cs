@@ -24,36 +24,33 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions.PlayerReceivers
         }
         
         public void EnviarImpactoAmbientalALaRed(
-            float damage,
-            float force,
-            HurtboxCharacteristics.InclinacionVertical inclinacion,
-            HurtboxCharacteristics.DireccionHorizontal direccion,
-            float durationStun,
-            Vector2 direccionDerechaEntorno,
-            Vector2 direccionArribaEntorno,
-            string nombreAfectado)
+            float damage, float force, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion,
+            float durationStun, Vector2 direccionDerechaEntorno, Vector2 direccionArribaEntorno, string nombreAfectado,
+            float heal, bool appliesSlow, float slowIntensity, float slowDuration)
         {
             string miInstanciaDePantallaID = NetworkManager.Singleton.LocalClientId.ToString();
 
-            if (miInstanciaDePantallaID != nombreAfectado)
-            {
-                return;
-            }
-
-            Debug.Log($"<color=orange>[EnvironmentalReceiver] -> ¡Mi gallina ({miInstanciaDePantallaID}) pisó el entorno! Aplicando consecuencias locales e informando al servidor...</color>");
+            if (miInstanciaDePantallaID != nombreAfectado) return;
 
             AplicarAturdimientoLocal(durationStun);
             AplicarFuerzaDeEmpujeLocal(force, inclinacion, direccion, direccionDerechaEntorno, direccionArribaEntorno);
 
-            NotificarDañoAmbientalAlServidorServerRpc(damage, nombreAfectado);
+            if (appliesSlow && _playerMovement != null)
+            {
+                _playerMovement.AplicarRalentizacionLocal(slowIntensity, slowDuration);
+            }
+
+            NotificarCambiosSaludAmbientalServerRpc(damage, heal, nombreAfectado);
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void NotificarDañoAmbientalAlServidorServerRpc(float damage, string nombreVictima)
+        private void NotificarCambiosSaludAmbientalServerRpc(float damage, float heal, string nombreVictima)
         {
             if (_matchManager != null)
             {
-                _matchManager.ModificarVidaJugador(nombreVictima, -damage);
+                if (damage > 0f) _matchManager.ModificarVidaJugador(nombreVictima, -damage);
+
+                if (heal > 0f) _matchManager.ModificarVidaJugador(nombreVictima, heal);
             }
         }
 
@@ -61,20 +58,13 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions.PlayerReceivers
         {
             if (duracion <= 0f || _playerMovement == null) return;
             _playerMovement.StunningTime(duracion);
-            Debug.Log($"<color=yellow>[STUN AMBIENTAL] -> Joystick inhabilitado por {duracion}s.</color>");
         }
 
-        private void AplicarFuerzaDeEmpujeLocal(
-            float fuerza, 
-            HurtboxCharacteristics.InclinacionVertical inclinacion, 
-            HurtboxCharacteristics.DireccionHorizontal direccion, 
-            Vector2 dirDerecha, 
-            Vector2 dirArriba)
+        private void AplicarFuerzaDeEmpujeLocal(float fuerza, HurtboxCharacteristics.InclinacionVertical inclinacion, HurtboxCharacteristics.DireccionHorizontal direccion, Vector2 dirDerecha, Vector2 dirArriba)
         {
-            if (_rb == null) return;
+            if (_rb == null || fuerza <= 0f) return;
 
             Vector2 vectorResultado = Vector2.zero;
-
             switch (direccion)
             {
                 case HurtboxCharacteristics.DireccionHorizontal.Forward:   vectorResultado = dirDerecha; break;
@@ -88,7 +78,6 @@ namespace MultiPlayerSection.GameplayScripts.PlayersInteractions.PlayerReceivers
 
             _rb.linearVelocity = Vector2.zero;
             _rb.AddForce(vectorResultado.normalized * fuerza, ForceMode2D.Impulse);
-            Debug.Log($"<color=magenta>[FÍSICA AMBIENTAL] -> Empujando gallina con fuerza: {fuerza} | Dirección: {vectorResultado.normalized}</color>");
         }
     }
 }
