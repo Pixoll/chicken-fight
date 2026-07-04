@@ -68,11 +68,16 @@ namespace MainMenuSection.MenuScripts {
                 fightButton.SetActive(false);
 
                 GameplayNetworkManager.Instance.OnPlayerJoined += OnPlayerJoined;
+                GameplayNetworkManager.Instance.OnPlayerLeft += OnPlayerLeft;
             }
 
             multiplayerOptionsSection.SetActive(false);
             multiplayerLobbySection.SetActive(true);
             multiplayerJoinLobbySection.SetActive(false);
+            player2PlaceholderImage.SetActive(true);
+            player2Image.SetActive(false);
+            fightButton.SetActive(false);
+            waitingHostText.SetActive(false);
         }
 
         public void ConfirmJoinLobby() {
@@ -84,12 +89,14 @@ namespace MainMenuSection.MenuScripts {
 
             GameplayNetworkManager.Instance.OnJoinedLobby -= OnJoinedLobby;
             GameplayNetworkManager.Instance.OnJoinedLobby += OnJoinedLobby;
+            GameplayNetworkManager.Instance.OnHostLeft += OnHostLeft;
             GameplayNetworkManager.Instance?.JoinHost(inputCode);
         }
 
         public void CancelHostAndReturn() {
             if (GameplayNetworkManager.Instance != null) {
                 GameplayNetworkManager.Instance.OnPlayerJoined -= OnPlayerJoined;
+                GameplayNetworkManager.Instance.OnPlayerLeft -= OnPlayerLeft;
                 GameplayNetworkManager.Instance.CloseConnection();
             }
 
@@ -103,11 +110,23 @@ namespace MainMenuSection.MenuScripts {
             waitingHostText.SetActive(false);
         }
 
+        private void OnPlayerLeft() {
+            player2PlaceholderImage.SetActive(true);
+            player2Image.SetActive(false);
+            fightButton.SetActive(false);
+            waitingHostText.SetActive(false);
+        }
+
         private void OnJoinedLobby() {
             OpenMultiplayerLobbyMenu();
             player2PlaceholderImage.SetActive(false);
             player2Image.SetActive(true);
             waitingHostText.SetActive(true);
+        }
+
+        private void OnHostLeft() {
+            GameplayNetworkManager.Instance.OnHostLeft -= OnHostLeft;
+            OpenMultiplayerJoinLobbyMenu();
         }
 
         public void OpenMultiplayerJoinLobbyMenu() {

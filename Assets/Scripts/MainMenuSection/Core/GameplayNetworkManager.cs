@@ -66,6 +66,7 @@ namespace MainMenuSection {
             NetworkManager.Singleton.OnServerStarted -= OnHostStartedLocal;
             NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnServerShutdown;
             NetworkManager.Singleton.Shutdown();
         }
 
@@ -136,12 +137,15 @@ namespace MainMenuSection {
 
             _transport.SetConnectionData(targetIp, 7777);
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnServerShutdown; 
             IsPlayer1 = false;
 
             NetworkManager.Singleton.StartClient();
         }
 
         public Action OnPlayerJoined;
+        public Action OnPlayerLeft;
+        public Action OnHostLeft;
         public Action OnJoinedLobby;
 
         private void OnHostStartedLocal() {
@@ -169,6 +173,13 @@ namespace MainMenuSection {
         }
 
         private void OnClientDisconnected(ulong clientId) {
+            Debug.Log("<color=cyan>[GameplayNetworkManager] Client disconnected</color>");
+            OnPlayerLeft?.Invoke();
+        }
+
+        private void OnServerShutdown(ulong clientId) {
+            Debug.Log("<color=cyan>[GameplayNetworkManager] Host disconnected</color>");
+            OnHostLeft?.Invoke();
         }
 
         private void ImprimirMensajeUnionJugador(ulong nuevoClientId) {
