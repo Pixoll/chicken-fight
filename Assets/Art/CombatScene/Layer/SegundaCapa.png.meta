@@ -1,0 +1,520 @@
+fileFormatVersion: 2
+guid: 72e2b38cf7a8613c4a6e5ce59bf60b0a
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -5287914365025081668
+    second: SegundaCapa_0
+  - first:
+      213: 959627964199189345
+    second: SegundaCapa_1
+  - first:
+      213: 2102900848846461669
+    second: SegundaCapa_2
+  - first:
+      213: 45392949387388715
+    second: SegundaCapa_3
+  - first:
+      213: -1465474969078620971
+    second: SegundaCapa_4
+  - first:
+      213: 6323042589558934705
+    second: SegundaCapa_5
+  - first:
+      213: 8757278808658776524
+    second: SegundaCapa_6
+  - first:
+      213: -1562318225464534826
+    second: SegundaCapa_7
+  - first:
+      213: 1099598410087202836
+    second: SegundaCapa_8
+  - first:
+      213: -612180035496108835
+    second: SegundaCapa_9
+  - first:
+      213: 3957937414528102305
+    second: SegundaCapa_10
+  - first:
+      213: -4325184489868865355
+    second: SegundaCapa_11
+  - first:
+      213: -5062011758952571783
+    second: SegundaCapa_12
+  - first:
+      213: 8492879913184087812
+    second: SegundaCapa_13
+  - first:
+      213: -2064541325414738217
+    second: SegundaCapa_14
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: SegundaCapa_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1080
+        width: 197
+        height: 258
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb6aefdc6ed8d96b0800000000000000
+      internalID: -5287914365025081668
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_1
+      rect:
+        serializedVersion: 2
+        x: 253
+        y: 1080
+        width: 116
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 16bbf929c88415d00800000000000000
+      internalID: 959627964199189345
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_2
+      rect:
+        serializedVersion: 2
+        x: 1150
+        y: 1145
+        width: 195
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5ea5c5d2e210f2d10800000000000000
+      internalID: 2102900848846461669
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_3
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 1083
+        width: 45
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b27ea8f95a441a000800000000000000
+      internalID: 45392949387388715
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_4
+      rect:
+        serializedVersion: 2
+        x: 370
+        y: 1081
+        width: 80
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5dc97d0b74699abe0800000000000000
+      internalID: -1465474969078620971
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_5
+      rect:
+        serializedVersion: 2
+        x: 1076
+        y: 936
+        width: 56
+        height: 70
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1bc835afbb5ffb750800000000000000
+      internalID: 6323042589558934705
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_6
+      rect:
+        serializedVersion: 2
+        x: 1140
+        y: 935
+        width: 37
+        height: 49
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc1992dadaa188970800000000000000
+      internalID: 8757278808658776524
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_7
+      rect:
+        serializedVersion: 2
+        x: 1181
+        y: 935
+        width: 30
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d85119f9d7815ae0800000000000000
+      internalID: -1562318225464534826
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_8
+      rect:
+        serializedVersion: 2
+        x: 344
+        y: 905
+        width: 192
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 41005d49dee824f00800000000000000
+      internalID: 1099598410087202836
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_9
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 735
+        width: 82
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ddc1bad40891187f0800000000000000
+      internalID: -612180035496108835
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_10
+      rect:
+        serializedVersion: 2
+        x: 188
+        y: 739
+        width: 51
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1afec24cb1b6de630800000000000000
+      internalID: 3957937414528102305
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_11
+      rect:
+        serializedVersion: 2
+        x: 797
+        y: 704
+        width: 248
+        height: 163
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b0565d4f9bd9f3c0800000000000000
+      internalID: -4325184489868865355
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_12
+      rect:
+        serializedVersion: 2
+        x: 1136
+        y: 712
+        width: 153
+        height: 105
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 97c18caff1f10c9b0800000000000000
+      internalID: -5062011758952571783
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_13
+      rect:
+        serializedVersion: 2
+        x: 1398
+        y: 758
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 40f4369a845ccd570800000000000000
+      internalID: 8492879913184087812
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SegundaCapa_14
+      rect:
+        serializedVersion: 2
+        x: 983
+        y: 691
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d65a8a5a964953e0800000000000000
+      internalID: -2064541325414738217
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      SegundaCapa_0: -5287914365025081668
+      SegundaCapa_1: 959627964199189345
+      SegundaCapa_10: 3957937414528102305
+      SegundaCapa_11: -4325184489868865355
+      SegundaCapa_12: -5062011758952571783
+      SegundaCapa_13: 8492879913184087812
+      SegundaCapa_14: -2064541325414738217
+      SegundaCapa_2: 2102900848846461669
+      SegundaCapa_3: 45392949387388715
+      SegundaCapa_4: -1465474969078620971
+      SegundaCapa_5: 6323042589558934705
+      SegundaCapa_6: 8757278808658776524
+      SegundaCapa_7: -1562318225464534826
+      SegundaCapa_8: 1099598410087202836
+      SegundaCapa_9: -612180035496108835
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

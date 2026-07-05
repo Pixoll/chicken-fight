@@ -6,6 +6,12 @@ namespace MultiPlayerSection.PlayerScripts {
         [Header("Configuración del Salto")] 
         [SerializeField] private float jumpForce = 5f;
 
+        [Header("Físicas de Gravedad Dinámica")]
+        [Tooltip("Multiplicador de gravedad base cuando la gallina está quieta o subiendo.")]
+        [SerializeField] private float gravedadBase = 1f;
+        [Tooltip("Multiplicador de gravedad cuando la gallina está cayendo. Valores entre 2.5 y 4 dan un salto de juego de peleas rápido y responsivo.")]
+        [SerializeField] private float multiplicadorCaida = 3f;
+
         [Header("Referencias De Colisión")] 
         [SerializeField] private Collider2D groundCheckCollider;
 
@@ -31,7 +37,11 @@ namespace MultiPlayerSection.PlayerScripts {
         }
 
         private void FixedUpdate() {
+            if (!IsOwner) return;
+
             CheckGroundedOverlap();
+
+            AjustarGravedadDeCaida();
 
             if (_jumpRequested) {
                 ExecuteJump();
@@ -56,6 +66,18 @@ namespace MultiPlayerSection.PlayerScripts {
             _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, 0);
             _rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             _isGrounded = false;
+        }
+
+
+        private void AjustarGravedadDeCaida() {
+            if (_rb == null) return;
+
+            if (_rb.linearVelocity.y < -0.1f && !_isGrounded) {
+                _rb.gravityScale = multiplicadorCaida;
+            }
+            else {
+                _rb.gravityScale = gravedadBase;
+            }
         }
 
         public bool IsGrounded => _isGrounded;
