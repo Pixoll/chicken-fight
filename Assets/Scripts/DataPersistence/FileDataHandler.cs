@@ -2,6 +2,10 @@ using System;
 using System.IO;
 using DataPersistence.Data;
 using UnityEngine;
+#if UNITY_EDITOR
+using System.Collections.Generic;
+using Unity.Multiplayer.PlayMode;
+#endif
 
 namespace DataPersistence {
     public class FileDataHandler {
@@ -11,6 +15,25 @@ namespace DataPersistence {
         private readonly bool _useEncryption;
 
         public FileDataHandler(string dataFilePath, bool useEncryption) {
+#if UNITY_EDITOR
+            // only in editor, override file name by appending the tag assigned to the virtual player
+            // this prevents data races for the same save file
+            IReadOnlyList<string> tags = CurrentPlayer.Tags;
+
+            if (tags.Count > 0) {
+                string dir = Path.GetDirectoryName(dataFilePath);
+                string name = Path.GetFileNameWithoutExtension(dataFilePath);
+                string ext = Path.GetExtension(dataFilePath);
+                string newName = $"{name}_{tags[0]}{ext}";
+
+                Debug.Log(
+                    $"<color=cyan>[FileDataHandler] Overriding save file name from '{name}' to '{newName}'</color>"
+                );
+
+                dataFilePath = Path.Combine(dir ?? "", $"{name}_{tags[0]}{ext}");
+            }
+#endif
+
             _dataFilePath = dataFilePath;
             _useEncryption = useEncryption;
         }

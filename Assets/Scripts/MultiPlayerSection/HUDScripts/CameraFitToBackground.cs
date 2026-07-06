@@ -7,21 +7,32 @@ namespace MultiPlayerSection.HUDScripts {
         [SerializeField] private Renderer background;
 
         private Camera _camera;
+        private bool _shouldRun;
+        private float _previousAspectRatio = -1;
 
         private void Awake() {
             _camera = GetComponent<Camera>();
+            _shouldRun = _camera != null && background != null;
+            Fit();
+        }
+
+        private void Update() {
             Fit();
         }
 
         private void Fit() {
-            if (background == null || _camera == null) return;
+            if (!_shouldRun) return;
+
+            float aspect = (float)Screen.width / Screen.height;
+
+            if (Mathf.Approximately(aspect, _previousAspectRatio)) return;
+
+            _previousAspectRatio = aspect;
 
             Bounds bounds = background.bounds;
             float bgWidth = bounds.size.x;
             float bgTop = bounds.max.y;
             float bgCenterX = bounds.center.x;
-
-            float aspect = (float)Screen.width / Screen.height;
 
             // Camera width must equal background width -> orthoSize = width / (2 * aspect)
             float orthoSize = bgWidth / (2f * aspect);

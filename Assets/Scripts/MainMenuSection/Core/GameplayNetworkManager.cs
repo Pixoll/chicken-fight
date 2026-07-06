@@ -146,7 +146,7 @@ namespace MainMenuSection {
         public Action OnPlayerJoined;
         public Action OnPlayerLeft;
         public Action OnHostLeft;
-        public Action OnJoinedLobby;
+        public Action OnJoinedRoom;
 
         private void OnHostStartedLocal() {
             // Desuscribimos inmediatamente para evitar ejecuciones repetidas involuntarias
@@ -162,7 +162,7 @@ namespace MainMenuSection {
                 // Este log se ejecutará localmente en cualquier instancia cuando se conecte con éxito
                 case false:
                     ImprimirMensajeUnionJugador(clientId);
-                    OnJoinedLobby?.Invoke();
+                    OnJoinedRoom?.Invoke();
                     break;
 
                 case true when clientId != NetworkManager.Singleton.LocalClientId:

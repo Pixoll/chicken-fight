@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace MainMenuSection.MenuScripts {
@@ -6,58 +8,96 @@ namespace MainMenuSection.MenuScripts {
         [Header("Menu Sections")] [SerializeField]
         private GameObject mainSection;
 
-        [SerializeField] private GameObject singleplayerSection;
-        [SerializeField] private GameObject multiplayerSection;
-        [SerializeField] private GameObject multiplayerOptionsSection;
-        [SerializeField] private GameObject multiplayerLobbySection;
-        [SerializeField] private GameObject multiplayerJoinLobbySection;
+        [SerializeField] private GameObject playSection;
+        [SerializeField] private GameObject playOptionsSection;
+        [SerializeField] private GameObject playCreateRoomSection;
+        [SerializeField] private GameObject playJoinRoomSection;
+        [SerializeField] private GameObject howToPlaySection;
         [SerializeField] private GameObject preferencesSection;
+        [SerializeField] private GameObject statsSection;
         [SerializeField] private GameObject creditsSection;
+        [SerializeField] private GameObject quitConfirmationSection;
 
         [Header("Multiplayer UI Elements")] [SerializeField]
         private TMP_Text hostCodeText;
 
         [SerializeField] private TMP_InputField joinCodeInputField;
 
-        [Header("Lobby Status")] [SerializeField]
+        [Header("Room Status")] [SerializeField]
         private GameObject player2PlaceholderImage;
 
         [SerializeField] private GameObject player2Image;
         [SerializeField] private GameObject fightButton;
         [SerializeField] private GameObject waitingHostText;
 
+        private List<GameObject> _primarySections;
+        private List<GameObject> _secondaryPlaySections;
+
+        private void Awake() {
+            _primarySections = new List<GameObject> {
+                mainSection,
+                playSection,
+                howToPlaySection,
+                preferencesSection,
+                statsSection,
+                creditsSection,
+            };
+
+            _secondaryPlaySections = new List<GameObject> {
+                playOptionsSection,
+                playCreateRoomSection,
+                playJoinRoomSection,
+            };
+        }
+
         private void Start() {
             OpenMainMenuSection();
         }
 
-        public void OpenSingleplayerMenu() {
-            mainSection.SetActive(false);
-            singleplayerSection.SetActive(true);
-            multiplayerSection.SetActive(false);
-            preferencesSection.SetActive(false);
-            creditsSection.SetActive(false);
+        public void OpenMainMenuSection() {
+            ActivatePrimarySection(mainSection);
         }
 
-        public void OpenMultiplayerMenu() {
-            mainSection.SetActive(false);
-            singleplayerSection.SetActive(false);
-            multiplayerSection.SetActive(true);
-            preferencesSection.SetActive(false);
-            creditsSection.SetActive(false);
-            OpenMultiplayerOptionsMenu();
+        public void OpenPlayMenu() {
+            ActivatePrimarySection(playSection);
+            OpenPlayOptionsMenu();
         }
 
-        public void OpenMultiplayerOptionsMenu() {
-            if (multiplayerLobbySection.activeInHierarchy || multiplayerJoinLobbySection.activeInHierarchy) {
+        public void OpenHowToPlaySection() {
+            ActivatePrimarySection(howToPlaySection);
+        }
+
+        public void OpenPreferencesSection() {
+            ActivatePrimarySection(preferencesSection);
+        }
+
+        public void OpenStatsSection() {
+            ActivatePrimarySection(statsSection);
+        }
+
+        public void OpenCreditsSection() {
+            ActivatePrimarySection(creditsSection);
+        }
+
+        public void OpenQuitConfirmationSection() {
+            quitConfirmationSection.SetActive(true);
+        }
+
+        public void CloseQuitConfirmationSection() {
+            quitConfirmationSection.SetActive(false);
+        }
+
+        public void OpenPlayOptionsMenu() {
+            if (playCreateRoomSection.activeInHierarchy) {
+                GameplayNetworkManager.Instance.OnPlayerJoined -= OnPlayerJoined;
+                GameplayNetworkManager.Instance.OnPlayerLeft -= OnPlayerLeft;
                 GameplayNetworkManager.Instance.CloseConnection();
             }
 
-            multiplayerOptionsSection.SetActive(true);
-            multiplayerLobbySection.SetActive(false);
-            multiplayerJoinLobbySection.SetActive(false);
+            ActivateSecondaryPlaySection(playOptionsSection);
         }
 
-        public void OpenMultiplayerLobbyMenu() {
+        public void OpenPlayCreateRoomMenu() {
             if (GameplayNetworkManager.Instance != null) {
                 GameplayNetworkManager.Instance.CreateHost();
                 string generatedCode = GameplayNetworkManager.GetCurrentHostCode();
@@ -71,39 +111,38 @@ namespace MainMenuSection.MenuScripts {
                 GameplayNetworkManager.Instance.OnPlayerLeft += OnPlayerLeft;
             }
 
-            multiplayerOptionsSection.SetActive(false);
-            multiplayerLobbySection.SetActive(true);
-            multiplayerJoinLobbySection.SetActive(false);
+            ActivateSecondaryPlaySection(playCreateRoomSection);
             player2PlaceholderImage.SetActive(true);
             player2Image.SetActive(false);
             fightButton.SetActive(false);
             waitingHostText.SetActive(false);
         }
 
-        public void ConfirmJoinLobby() {
+        public void OpenPlayJoinRoomMenu() {
+            joinCodeInputField.text = "";
+            ActivateSecondaryPlaySection(playJoinRoomSection);
+        }
+
+        public void ConfirmJoinRoom() {
             string inputCode = joinCodeInputField.text;
 
             if (string.IsNullOrWhiteSpace(inputCode)) {
                 return;
             }
 
-            GameplayNetworkManager.Instance.OnJoinedLobby -= OnJoinedLobby;
-            GameplayNetworkManager.Instance.OnJoinedLobby += OnJoinedLobby;
+            GameplayNetworkManager.Instance.OnJoinedRoom -= OnJoinedRoom;
+            GameplayNetworkManager.Instance.OnJoinedRoom += OnJoinedRoom;
             GameplayNetworkManager.Instance.OnHostLeft += OnHostLeft;
             GameplayNetworkManager.Instance?.JoinHost(inputCode);
         }
 
-        public void CancelHostAndReturn() {
-            if (GameplayNetworkManager.Instance != null) {
+        private void OnPlayerJoined() {
+            if (player2PlaceholderImage.IsDestroyed()) {
                 GameplayNetworkManager.Instance.OnPlayerJoined -= OnPlayerJoined;
                 GameplayNetworkManager.Instance.OnPlayerLeft -= OnPlayerLeft;
-                GameplayNetworkManager.Instance.CloseConnection();
+                return;
             }
 
-            OpenMultiplayerOptionsMenu();
-        }
-
-        private void OnPlayerJoined() {
             player2PlaceholderImage.SetActive(false);
             player2Image.SetActive(true);
             fightButton.SetActive(true);
@@ -111,14 +150,20 @@ namespace MainMenuSection.MenuScripts {
         }
 
         private void OnPlayerLeft() {
+            if (player2PlaceholderImage.IsDestroyed()) {
+                GameplayNetworkManager.Instance.OnPlayerJoined -= OnPlayerJoined;
+                GameplayNetworkManager.Instance.OnPlayerLeft -= OnPlayerLeft;
+                return;
+            }
+
             player2PlaceholderImage.SetActive(true);
             player2Image.SetActive(false);
             fightButton.SetActive(false);
             waitingHostText.SetActive(false);
         }
 
-        private void OnJoinedLobby() {
-            OpenMultiplayerLobbyMenu();
+        private void OnJoinedRoom() {
+            OpenPlayCreateRoomMenu();
             player2PlaceholderImage.SetActive(false);
             player2Image.SetActive(true);
             waitingHostText.SetActive(true);
@@ -126,38 +171,19 @@ namespace MainMenuSection.MenuScripts {
 
         private void OnHostLeft() {
             GameplayNetworkManager.Instance.OnHostLeft -= OnHostLeft;
-            OpenMultiplayerJoinLobbyMenu();
+            OpenPlayJoinRoomMenu();
         }
 
-        public void OpenMultiplayerJoinLobbyMenu() {
-            joinCodeInputField.text = "";
-            multiplayerOptionsSection.SetActive(false);
-            multiplayerLobbySection.SetActive(false);
-            multiplayerJoinLobbySection.SetActive(true);
+        private void ActivatePrimarySection(GameObject section) {
+            foreach (GameObject primary in _primarySections) {
+                primary.SetActive(primary == section);
+            }
         }
 
-        public void OpenPreferencesSection() {
-            mainSection.SetActive(false);
-            singleplayerSection.SetActive(false);
-            multiplayerSection.SetActive(false);
-            preferencesSection.SetActive(true);
-            creditsSection.SetActive(false);
-        }
-
-        public void OpenMainMenuSection() {
-            mainSection.SetActive(true);
-            singleplayerSection.SetActive(false);
-            multiplayerSection.SetActive(false);
-            preferencesSection.SetActive(false);
-            creditsSection.SetActive(false);
-        }
-
-        public void OpenCreditsSection() {
-            mainSection.SetActive(false);
-            singleplayerSection.SetActive(false);
-            multiplayerSection.SetActive(false);
-            preferencesSection.SetActive(false);
-            creditsSection.SetActive(true);
+        private void ActivateSecondaryPlaySection(GameObject section) {
+            foreach (GameObject secondary in _secondaryPlaySections) {
+                secondary.SetActive(secondary == section);
+            }
         }
     }
 }

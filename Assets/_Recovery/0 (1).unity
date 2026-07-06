@@ -341,7 +341,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 440070438}
         m_TargetAssemblyTypeName: MenuScripts.MainMenuController, Assembly-CSharp
-        m_MethodName: OpenMultiplayerLobbyMenu
+        m_MethodName: OpenPlayCreateRoomMenu
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -518,7 +518,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 440070438}
         m_TargetAssemblyTypeName: MenuScripts.MainMenuController, Assembly-CSharp
-        m_MethodName: OpenMultiplayerOptionsMenu
+        m_MethodName: OpenPlayOptionsMenu
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -836,7 +836,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 440070438}
         m_TargetAssemblyTypeName: MenuScripts.MainMenuController, Assembly-CSharp
-        m_MethodName: ConfirmJoinLobby
+        m_MethodName: ConfirmJoinRoom
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1748,7 +1748,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 440070438}
         m_TargetAssemblyTypeName: MenuScripts.MainMenuController, Assembly-CSharp
-        m_MethodName: OpenMultiplayerJoinLobbyMenu
+        m_MethodName: OpenPlayJoinRoomMenu
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1988,7 +1988,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 440070438}
         m_TargetAssemblyTypeName: MenuScripts.MainMenuController, Assembly-CSharp
-        m_MethodName: OpenMultiplayerOptionsMenu
+        m_MethodName: OpenPlayOptionsMenu
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2980,7 +2980,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 440070438}
         m_TargetAssemblyTypeName: MenuScripts.MainMenuController, Assembly-CSharp
-        m_MethodName: OpenMultiplayerMenu
+        m_MethodName: OpenPlayMenu
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

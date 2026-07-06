@@ -1,24 +1,47 @@
 using System.Collections;
 using UnityEngine;
+#if UNITY_EDITOR
+using System.Collections.Generic;
+using Unity.Multiplayer.PlayMode;
+#endif
 
 namespace MainMenuSection.MenuScripts {
-    public class MenuBackgroundMusic : MonoBehaviour {
+    public class MainMenuBackgroundMusic : MonoBehaviour {
         [SerializeField] private AudioSource track1;
         [SerializeField] private AudioSource track2;
         [SerializeField] [Range(0f, 3f)] private float transitionTime;
 
         private float _track1OriginalVolume;
         private float _track2OriginalVolume;
+#if UNITY_EDITOR
+        private bool _playMusic;
+#endif
 
         private void Awake() {
             _track1OriginalVolume = track1.volume;
             _track2OriginalVolume = track2.volume;
             track2.volume = 0f;
+
+#if UNITY_EDITOR
+            IReadOnlyList<string> tags = CurrentPlayer.Tags;
+            _playMusic = tags.Count > 0 && tags[0] == "P1";
+
+            if (_playMusic) {
+                track1.Play();
+            }
+#else
+            track1.Play();
+#endif
+
             Debug.Log($"<color=teal>[MenuBackgroundMusic] Track 1 = {track1.resource.name}</color>");
             Debug.Log($"<color=teal>[MenuBackgroundMusic] Track 2 = {track2.resource.name}</color>");
         }
 
         public void PlayTrack1() {
+#if UNITY_EDITOR
+            if (!_playMusic) return;
+#endif
+
             if (track1.isPlaying) {
                 Debug.LogWarning("[MenuBackgroundMusic] Track 1 already playing");
                 return;
@@ -29,6 +52,10 @@ namespace MainMenuSection.MenuScripts {
         }
 
         public void PlayTrack2() {
+#if UNITY_EDITOR
+            if (!_playMusic) return;
+#endif
+
             if (track2.isPlaying) {
                 Debug.LogWarning("[MenuBackgroundMusic] Track 2 already playing");
                 return;
