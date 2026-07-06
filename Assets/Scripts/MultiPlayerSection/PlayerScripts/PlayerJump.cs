@@ -68,7 +68,6 @@ namespace MultiPlayerSection.PlayerScripts {
             _isGrounded = false;
         }
 
-
         private void AjustarGravedadDeCaida() {
             if (_rb == null) return;
 
@@ -80,6 +79,8 @@ namespace MultiPlayerSection.PlayerScripts {
             }
         }
 
+        // 🌟 PROPIEDADES PÚBLICAS PARA EL CONTROLADOR DE ANIMACIÓN
         public bool IsGrounded => _isGrounded;
+        public float VerticalVelocity => _rb != null ? _rb.linearVelocity.y : 0f;
     }
 }

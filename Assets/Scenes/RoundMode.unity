@@ -2616,7 +2616,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 4.6723948
+  orthographic size: 4.9763565
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -2641,7 +2641,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.0070118904, y: 0.4834442, z: -10}
+  m_LocalPosition: {x: -0.0070118904, y: 0.17948246, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3914,7 +3914,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 999e8b084ac391841addb0d152804d09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameplayScripts.PlayerImpactsSection.ObjectBoxCharacteristics
-  nombreObjeto: Espada
+  objetoID: 0
 --- !u!61 &822989308
 BoxCollider2D:
   m_ObjectHideFlags: 0

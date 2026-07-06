@@ -21,9 +21,18 @@ AnimationClip:
   - serializedVersion: 2
     curve:
     - time: 0
-      value: {fileID: 1554669544101352617, guid: 10168017b411db64cb26abf7170cf275, type: 3}
+      value: {fileID: -7813555226842256837, guid: 17ce0e3f4376812f98f2baeb4b356608, type: 3}
     attribute: m_Sprite
-    path: 
+    path: Cuerpo_Render
+    classID: 212
+    script: {fileID: 0}
+    flags: 2
+  - serializedVersion: 2
+    curve:
+    - time: 0
+      value: {fileID: 0}
+    attribute: m_Sprite
+    path: Ala_Render
     classID: 212
     script: {fileID: 0}
     flags: 2
@@ -35,7 +44,16 @@ AnimationClip:
   m_ClipBindingConstant:
     genericBindings:
     - serializedVersion: 2
-      path: 0
+      path: 1847785407
+      attribute: 0
+      script: {fileID: 0}
+      typeID: 212
+      customType: 23
+      isPPtrCurve: 1
+      isIntCurve: 0
+      isSerializeReferenceCurve: 0
+    - serializedVersion: 2
+      path: 3276501724
       attribute: 0
       script: {fileID: 0}
       typeID: 212
@@ -44,7 +62,8 @@ AnimationClip:
       isIntCurve: 0
       isSerializeReferenceCurve: 0
     pptrCurveMapping:
-    - {fileID: 1554669544101352617, guid: 10168017b411db64cb26abf7170cf275, type: 3}
+    - {fileID: -7813555226842256837, guid: 17ce0e3f4376812f98f2baeb4b356608, type: 3}
+    - {fileID: 0}
   m_AnimationClipSettings:
     serializedVersion: 2
     m_AdditiveReferencePoseClip: {fileID: 0}

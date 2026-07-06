@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using MultiPlayerSection.GameplayScripts;
+using MultiPlayerSection.GameplayScripts.Objects;
 using MultiPlayerSection.PlayerScripts;
 using Unity.Netcode;
 using UnityEngine;
@@ -124,8 +125,6 @@ namespace MultiPlayerSection.NetworkScripts
             Invoke(nameof(FuncionInicioRonda), 3f);
         }
 
-
-
         private void EjecutarRespawnerSeguro()
         {
             if (!IsServer) return;
@@ -159,6 +158,12 @@ namespace MultiPlayerSection.NetworkScripts
                     gallina = _referenciasGallinasInstanciadas[idCliente];
                 }
 
+                PlayerObjectAttackManager attackManager = gallina.GetComponentInChildren<PlayerObjectAttackManager>();
+                if (attackManager != null)
+                {
+                    attackManager.ResetearAlGolpeBase();
+                }
+
                 PlayerMovement movement = gallina.GetComponentInChildren<PlayerMovement>();
                 if (movement != null)
                 {
@@ -178,7 +183,6 @@ namespace MultiPlayerSection.NetworkScripts
             }
         }
         
-
         [ServerRpc(RequireOwnership = false)]
         private void ModificarVidaJugadorServerRpc(string nombreUnico, float cantidad)
         {

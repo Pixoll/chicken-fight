@@ -7,13 +7,19 @@ namespace MultiPlayerSection.PlayerScripts
 {
     public class PlayerMovement : NetworkBehaviour
     {
+        // 🌟 NUEVO: Hashing de todos los parámetros solicitados para exclusión mutua
         private static readonly int IsRunning = Animator.StringToHash("IsRunning");
+        private static readonly int IsJump = Animator.StringToHash("IsJump");
+        private static readonly int IsFall = Animator.StringToHash("IsFall");
+        private static readonly int IsPushed = Animator.StringToHash("IsPushed");
+        private static readonly int IsStill = Animator.StringToHash("IsStill");
 
         [Header("Configuración de Movimiento")] 
         [SerializeField] private float moveSpeed = 5f;
 
         private Rigidbody2D _rb;
         private PlayerInputHandler _inputHandler;
+        private PlayerJump _playerJump; // 🌟 NUEVO: Cacheamos la referencia del salto
         private float _horizontalMove;
         private Animator _animator;
         private float _knockbackEndTime; 
@@ -28,6 +34,7 @@ namespace MultiPlayerSection.PlayerScripts
             _rb = GetComponentInParent<Rigidbody2D>();
             _inputHandler = transform.root.GetComponentInChildren<PlayerInputHandler>();
             _animator = transform.root.GetComponentInChildren<Animator>();
+            _playerJump = transform.root.GetComponentInChildren<PlayerJump>();
         }
 
         public override void OnNetworkSpawn()
@@ -78,6 +85,8 @@ namespace MultiPlayerSection.PlayerScripts
             if (Time.time < _knockbackEndTime)
             {
                 _horizontalMove = 0f;
+                // Aunque no pueda moverse, llamamos a UpdateAnimation para asegurar que procese el estado IsPushed
+                UpdateAnimation();
                 return;
             }
 
@@ -99,7 +108,6 @@ namespace MultiPlayerSection.PlayerScripts
 
         public void StunningTime(float duration) { _knockbackEndTime = Time.time + duration; }
 
-
         public void AplicarRalentizacionLocal(float intensidad, float duracion)
         {
             if (duracion <= 0f) return;
@@ -120,7 +128,69 @@ namespace MultiPlayerSection.PlayerScripts
         }
 
         private void HandleFlip() { _isFacingRight.Value = _horizontalMove switch { > 0f when !_isFacingRight.Value => true, < 0f when _isFacingRight.Value => false, var _ => _isFacingRight.Value }; }
-        private void UpdateAnimation() { if (!_animator) return; _animator.SetBool(IsRunning, Mathf.Abs(_horizontalMove) > 0.05f); }
+
+        // 🌟 NUEVO: Sistema de Animación con Exclusión Mutua Estricta
+        private void UpdateAnimation() 
+        { 
+            if (!_animator) return;
+
+            // Inicializamos todos los estados posibles en falso
+            bool running = false;
+            bool jump = false;
+            bool fall = false;
+            bool pushed = false;
+            bool still = false;
+
+            // 1. Prioridad Máxima: ¿Está bajo el efecto de un impacto (Stun)?
+            if (Time.time < _knockbackEndTime)
+            {
+                pushed = true;
+            }
+            // 2. Si no está empujado, evaluamos las físicas de suelo y aire
+            else if (_playerJump != null)
+            {
+                bool tocandoSuelo = _playerJump.IsGrounded;
+                float velocidadY = _playerJump.VerticalVelocity;
+                bool moviendoJoystick = Mathf.Abs(_horizontalMove) > 0.05f;
+
+                if (tocandoSuelo)
+                {
+                    if (moviendoJoystick)
+                    {
+                        running = true;
+                    }
+                    else
+                    {
+                        still = true;
+                    }
+                }
+                else // Está en el aire
+                {
+                    if (velocidadY < -0.1f)
+                    {
+                        fall = true;
+                    }
+                    else
+                    {
+                        // Está subiendo o en el ápice del salto
+                        jump = true;
+                    }
+                }
+            }
+            else
+            {
+                // Fallback de seguridad si falta el script PlayerJump en la gallina
+                still = true;
+            }
+
+            // Aplicamos los valores de manera que SOLO uno sea VERDADERO a la vez
+            _animator.SetBool(IsPushed, pushed);
+            _animator.SetBool(IsRunning, running);
+            _animator.SetBool(IsJump, jump);
+            _animator.SetBool(IsFall, fall);
+            _animator.SetBool(IsStill, still);
+        }
+
         private void UpdateOrientation(bool faceRight) { if (transform.root != null) transform.root.rotation = faceRight ? Quaternion.Euler(0f, 180f, 0f) : Quaternion.Euler(0f, 0f, 0f); }
         private void OnOrientationChanged(bool prev, bool newVal) { UpdateOrientation(newVal); }
         public override void OnNetworkDespawn() { _isFacingRight.OnValueChanged -= OnOrientationChanged; }
@@ -139,7 +209,11 @@ namespace MultiPlayerSection.PlayerScripts
             _currentSlowIntensity = 1f;
             _horizontalMove = 0f;
 
-            if (_animator) _animator.SetBool(IsRunning, false);
+            if (_animator) 
+            {
+                _animator.SetBool(IsRunning, false);
+                _animator.SetBool(IsStill, true);
+            }
 
             if (_rb != null)
             {
@@ -154,5 +228,6 @@ namespace MultiPlayerSection.PlayerScripts
 
             Debug.Log($"<color=yellow>[Movement] -> Gallina local teletransportada exitosamente a: {nuevaPosicion}</color>");
         }
+        public bool IsPushedActive => Time.time < _knockbackEndTime;
     }
 }

@@ -1,45 +1,60 @@
 using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using MultiPlayerSection.GameplayScripts.Objects; 
 
 namespace MultiPlayerSection.PlayerScripts 
 {
     public class PlayerPunch : NetworkBehaviour 
     {
-        public enum TipoObjetoEquipado { Ninguno, Espada }
+        private static readonly int IsPunch = Animator.StringToHash("IsPunch");
 
-        [Header("Estado del Inventario")]
-        [SerializeField] private TipoObjetoEquipado objetoActual = TipoObjetoEquipado.Ninguno;
+        [Header("Referencias de Gestión")]
+        [Tooltip("Asigna aquí el contenedor que tiene el PlayerObjectAttackManager")]
+        [SerializeField] private PlayerObjectAttackManager objectAttackManager;
 
-        [Header("Configuración del Golpe Base (Punch)")] 
+        [Header("Configuración del Ataque")] 
         [SerializeField] private float punchCooldown = 4f;
         [SerializeField] private float hitboxDuration = 1f;
-        [SerializeField] private GameObject punchHurtbox;
-
-        [Header("Configuración de Objetos Equipables")]
-        [SerializeField] private GameObject espadaHurtbox; 
 
         private PlayerInputHandler _inputHandler;
+        private PlayerMovement _playerMovement;
         private float _nextPunchTime;
         private Coroutine _hitboxCoroutine;
-
-        public TipoObjetoEquipado ObjetoActual 
-        {
-            get => objetoActual;
-            set => objetoActual = value;
-        }
+        
+        private Animator _animator;
+        private ObjectBoxCharacteristics[] _objetosDisponibles;
 
         private void Awake() 
         {
             _inputHandler = transform.root.GetComponentInChildren<PlayerInputHandler>();
+            _animator = transform.root.GetComponentInChildren<Animator>();
+            
+            _playerMovement = transform.root.GetComponentInChildren<PlayerMovement>();
 
-            if (punchHurtbox != null) punchHurtbox.SetActive(false);
-            if (espadaHurtbox != null) espadaHurtbox.SetActive(false);
+            if (objectAttackManager == null)
+            {
+                objectAttackManager = GetComponentInChildren<PlayerObjectAttackManager>();
+                if (objectAttackManager == null) objectAttackManager = transform.root.GetComponentInChildren<PlayerObjectAttackManager>();
+            }
+
+            _objetosDisponibles = GetComponentsInChildren<ObjectBoxCharacteristics>(true);
+            foreach (var objeto in _objetosDisponibles)
+            {
+                if (objeto != null && objeto.gameObject != null)
+                {
+                    objeto.gameObject.SetActive(false);
+                }
+            }
         }
 
         private void Update() 
         {
-            if (!IsOwner || _inputHandler == null || !_inputHandler.IsPunchPressedThisFrame() || Time.time < _nextPunchTime) return;
+            if (!IsOwner || _inputHandler == null) return;
+
+            if (_playerMovement != null && _playerMovement.IsPushedActive) return;
+
+            if (!_inputHandler.IsPunchPressedThisFrame() || Time.time < _nextPunchTime) return;
 
             ExecutePunch();
             _nextPunchTime = Time.time + punchCooldown;
@@ -57,28 +72,41 @@ namespace MultiPlayerSection.PlayerScripts
 
         private IEnumerator PunchRoutine() 
         {
-            GameObject hurtboxActiva = ObtenerHurtboxActual();
+            GameObject hurtboxActiva = ObtenerHurtboxPorIDActual();
 
-            if (hurtboxActiva) hurtboxActiva.SetActive(true);
+            if (_animator != null) _animator.SetBool(IsPunch, true);
+
+            if (hurtboxActiva != null) hurtboxActiva.SetActive(true);
 
             yield return new WaitForSeconds(hitboxDuration);
 
-            if (hurtboxActiva) hurtboxActiva.SetActive(false);
+            if (hurtboxActiva != null) hurtboxActiva.SetActive(false);
+
+            if (_animator != null) _animator.SetBool(IsPunch, false);
 
             _hitboxCoroutine = null;
         }
 
-        private GameObject ObtenerHurtboxActual()
+        private GameObject ObtenerHurtboxPorIDActual()
         {
-            switch (objetoActual)
+            if (objectAttackManager == null)
             {
-                case TipoObjetoEquipado.Espada:
-                    return espadaHurtbox;
-                
-                case TipoObjetoEquipado.Ninguno:
-                default:
-                    return punchHurtbox;
+                Debug.LogWarning("[PlayerPunch] -> No hay ningún PlayerObjectAttackManager asignado o vinculado.");
+                return null;
             }
+
+            int idBuscado = objectAttackManager.IdGolpeActivoActual;
+
+            foreach (var objeto in _objetosDisponibles)
+            {
+                if (objeto != null && objeto.ObjetoID == idBuscado)
+                {
+                    return objeto.gameObject;
+                }
+            }
+
+            Debug.LogWarning($"[PlayerPunch] -> No se encontró ningún GameObject hijo con el ObjetoID: {idBuscado}");
+            return null;
         }
     }
 }
