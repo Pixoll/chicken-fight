@@ -15,6 +15,8 @@ namespace DataPersistence {
         private GameData _gameData;
         private List<IDataPersistence> _dataPersistenceObjects;
 
+        public string PlayerUsername => _gameData.username;
+
         private void Awake() {
             if (Instance != null && Instance != this) {
                 Destroy(gameObject);
