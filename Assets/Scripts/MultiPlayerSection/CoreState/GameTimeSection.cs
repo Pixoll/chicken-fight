@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace MultiPlayerSection.CoreState
 {
+    [RequireComponent(typeof(AudioSource))]
     public class GameTimeSection : MonoBehaviour
     {
         [Header("Configuración General")]
@@ -15,12 +16,19 @@ namespace MultiPlayerSection.CoreState
         private Dictionary<int, GameObject> _instanciasClonadas = new Dictionary<int, GameObject>();
         private float _tiempoRestante;
         private bool _rondaActiva = false;
+        
+        private AudioSource _audioSource;
 
         public System.Action<float> AlCambiarTiempoLocal;
         public System.Action AlAgotarseTiempoLocal;
 
         private void Awake()
         {
+            _audioSource = GetComponent<AudioSource>();
+            
+            _audioSource.playOnAwake = false;
+            _audioSource.spatialBlend = 0f; 
+
             if (TryGetComponent<RectTransform>(out var rect))
             {
                 rect.anchorMin = Vector2.zero;
@@ -31,11 +39,15 @@ namespace MultiPlayerSection.CoreState
             }
         }
 
-
         public void LimpiarYReiniciarSeccionLocal()
         {
             _rondaActiva = false;
             _tiempoRestante = 0f;
+
+            if (_audioSource != null)
+            {
+                _audioSource.Stop();
+            }
 
             foreach (var kvp in _instanciasClonadas)
             {
@@ -57,7 +69,6 @@ namespace MultiPlayerSection.CoreState
 
             Debug.Log("<color=orange>[GameTimeSection] -> Sección de tiempo limpiada y reseteada con éxito para la siguiente ronda.</color>");
         }
-
 
         public void IniciarCronometroMaestro()
         {
@@ -93,7 +104,8 @@ namespace MultiPlayerSection.CoreState
             for (int i = 0; i < lineaDeTiempo.Count; i++)
             {
                 TimeElement elemento = lineaDeTiempo[i];
-                if (elemento.objetoVisualoFisico == null) continue;
+                
+                if (elemento.objetoVisualoFisico == null && elemento.sonidoAlAparecer == null) continue;
 
                 if (segundoActual <= elemento.segundoAparicion && !elemento.yaAparecio && !elemento.yaTermino)
                 {
@@ -115,26 +127,34 @@ namespace MultiPlayerSection.CoreState
             if (indiceElemento < 0 || indiceElemento >= lineaDeTiempo.Count) return;
 
             TimeElement elemento = lineaDeTiempo[indiceElemento];
-            if (elemento.objetoVisualoFisico == null) return;
 
             if (activar)
             {
-                GameObject clon = Instantiate(elemento.objetoVisualoFisico);
-                _instanciasClonadas[indiceElemento] = clon;
-
-                if (elemento.puntoDeSpawneo != null)
+                if (elemento.sonidoAlAparecer != null && _audioSource != null)
                 {
-                    clon.transform.SetParent(elemento.puntoDeSpawneo, false);
-                    clon.transform.position = elemento.puntoDeSpawneo.position;
-                    
-                    if (elemento.heredarTransformCompleto)
-                    {
-                        clon.transform.rotation = elemento.puntoDeSpawneo.rotation;
-                        clon.transform.localScale = elemento.puntoDeSpawneo.localScale;
-                    }
+                    _audioSource.PlayOneShot(elemento.sonidoAlAparecer, elemento.volumenSonido);
+                    Debug.Log($"<color=cyan>[Timeline Audio] -> Reproduciendo track/efecto: '{elemento.sonidoAlAparecer.name}' al segundo: {_tiempoRestante:F2}</color>");
                 }
 
-                Debug.Log($"<color=teal>[Timeline] -> Activado GameObject: '{elemento.objetoVisualoFisico.name}' en el segundo: {_tiempoRestante:F2}</color>");
+                if (elemento.objetoVisualoFisico != null)
+                {
+                    GameObject clon = Instantiate(elemento.objetoVisualoFisico);
+                    _instanciasClonadas[indiceElemento] = clon;
+
+                    if (elemento.puntoDeSpawneo != null)
+                    {
+                        clon.transform.SetParent(elemento.puntoDeSpawneo, false);
+                        clon.transform.position = elemento.puntoDeSpawneo.position;
+                        
+                        if (elemento.heredarTransformCompleto)
+                        {
+                            clon.transform.rotation = elemento.puntoDeSpawneo.rotation;
+                            clon.transform.localScale = elemento.puntoDeSpawneo.localScale;
+                        }
+                    }
+
+                    Debug.Log($"<color=teal>[Timeline] -> Activado GameObject: '{elemento.objetoVisualoFisico.name}' en el segundo: {_tiempoRestante:F2}</color>");
+                }
             }
             else
             {

@@ -2,21 +2,25 @@
 using UnityEngine;
 
 namespace MultiPlayerSection.PlayerScripts {
+    [RequireComponent(typeof(AudioSource))]
     public class PlayerJump : NetworkBehaviour {
         [Header("Configuración del Salto")] 
         [SerializeField] private float jumpForce = 5f;
 
         [Header("Físicas de Gravedad Dinámica")]
-        [Tooltip("Multiplicador de gravedad base cuando la gallina está quieta o subiendo.")]
         [SerializeField] private float gravedadBase = 1f;
-        [Tooltip("Multiplicador de gravedad cuando la gallina está cayendo. Valores entre 2.5 y 4 dan un salto de juego de peleas rápido y responsivo.")]
         [SerializeField] private float multiplicadorCaida = 3f;
 
         [Header("Referencias De Colisión")] 
         [SerializeField] private Collider2D groundCheckCollider;
 
+        [Header("Audio del Salto (🌟 NUEVO)")]
+        [SerializeField] private AudioClip sonidoSalto;
+        [Range(0f, 1f)] [SerializeField] private float volumenSalto = 0.7f;
+
         private Rigidbody2D _rb;
         private PlayerInputHandler _inputHandler;
+        private AudioSource _audioSource;
 
         private int _groundLayerMask;
         private bool _isGrounded;
@@ -25,6 +29,7 @@ namespace MultiPlayerSection.PlayerScripts {
         private void Awake() {
             _rb = GetComponentInParent<Rigidbody2D>();
             _inputHandler = transform.root.GetComponentInChildren<PlayerInputHandler>();
+            _audioSource = GetComponent<AudioSource>();
             _groundLayerMask = LayerMask.GetMask("Ground");
         }
 
@@ -40,7 +45,6 @@ namespace MultiPlayerSection.PlayerScripts {
             if (!IsOwner) return;
 
             CheckGroundedOverlap();
-
             AjustarGravedadDeCaida();
 
             if (_jumpRequested) {
@@ -66,6 +70,30 @@ namespace MultiPlayerSection.PlayerScripts {
             _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, 0);
             _rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             _isGrounded = false;
+
+            ReproducirAudioSaltoLocal();
+            SolicitarAudioSaltoServerRpc();
+        }
+
+        private void ReproducirAudioSaltoLocal()
+        {
+            if (sonidoSalto != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(sonidoSalto, volumenSalto);
+            }
+        }
+
+        [ServerRpc]
+        private void SolicitarAudioSaltoServerRpc()
+        {
+            SincronizarAudioSaltoRpc();
+        }
+
+        [Rpc(SendTo.Everyone)]
+        private void SincronizarAudioSaltoRpc()
+        {
+            if (IsOwner) return;
+            ReproducirAudioSaltoLocal();
         }
 
         private void AjustarGravedadDeCaida() {
@@ -79,7 +107,6 @@ namespace MultiPlayerSection.PlayerScripts {
             }
         }
 
-        // 🌟 PROPIEDADES PÚBLICAS PARA EL CONTROLADOR DE ANIMACIÓN
         public bool IsGrounded => _isGrounded;
         public float VerticalVelocity => _rb != null ? _rb.linearVelocity.y : 0f;
     }

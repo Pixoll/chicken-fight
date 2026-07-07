@@ -1,4 +1,8 @@
+using System.Collections;
+using System.Collections.Generic;
 using MultiPlayerSection.CoreState;
+using MultiPlayerSection.Efects;
+using MultiPlayerSection.GameplayScripts.Objects; // Acceso a FallingObject
 using Unity.Netcode;
 using UnityEngine;
 
@@ -11,6 +15,10 @@ namespace MultiPlayerSection.NetworkScripts
         [Header("Referencias Seccionales")]
         [SerializeField] private GameTimeSection timeSection; 
         [SerializeField] private GameUIEventSection uiEventSection;
+
+        [Header("Gestión de Escenario")]
+        [Tooltip("Arrastra aquí todos los GameObjects fijos (Cajas, Lava, Trampas) colocados en la escena")]
+        [SerializeField] private List<GameObject> objetosFijosEnEscenario = new List<GameObject>();
 
         private void Awake()
         {
@@ -40,6 +48,16 @@ namespace MultiPlayerSection.NetworkScripts
         {
             if (!IsServer) return;
 
+            MatchInformationManager matchInfo = Object.FindFirstObjectByType<MatchInformationManager>();
+            if (matchInfo != null)
+            {
+                matchInfo.ActivarDescuentoDeVida();
+            }
+            else
+            {
+                Debug.LogWarning("[GlobalGameStateManager] No se encontró la instancia de MatchInformationManager en la escena para reactivar el daño.");
+            }
+
             Debug.Log($"<color=yellow>[GameState] -> Iniciando Ronda: {textoRound}. Ejecutando sincronización de interfaces y tiempos.</color>");
             
             if (uiEventSection != null) uiEventSection.MostrarAvisoInicioRound(textoRound);
@@ -64,6 +82,8 @@ namespace MultiPlayerSection.NetworkScripts
 
                 timeSection.IniciarCronometroMaestro();
                 
+                RespawnearObjetosLocalmenteEnCadaPantalla();
+
                 if (IsServer)
                 {
                     timeSection.AlAgotarseTiempoLocal += EvaluarGanadorPorTiempoAgotado;
@@ -75,6 +95,24 @@ namespace MultiPlayerSection.NetworkScripts
             }
         }
 
+        private void RespawnearObjetosLocalmenteEnCadaPantalla()
+        {
+            foreach (var obj in objetosFijosEnEscenario)
+            {
+                if (obj == null) continue;
+
+                if (obj.TryGetComponent<FallingObject>(out var fallingObj))
+                {
+                    fallingObj.RespawnearLocal();
+                    if (IsServer) fallingObj.ResetearVariableRecogidoServer();
+                }
+                else if (obj.TryGetComponent<MasaLavaAscendente>(out var lavaObj))
+                {
+                    lavaObj.RespawnearLocal();
+                }
+            }
+        }
+
         private void EvaluarGanadorPorTiempoAgotado()
         {
             if (!IsServer) return;
@@ -82,12 +120,21 @@ namespace MultiPlayerSection.NetworkScripts
             if (timeSection != null) timeSection.AlAgotarseTiempoLocal -= EvaluarGanadorPorTiempoAgotado;
 
             Debug.Log("<color=red>[GameState] -> El tiempo de la ronda expiró en el Servidor. Evaluando vidas en MatchInformationManager...</color>");
-            
         }
         
         public void FinDeRondaServer(string textoGanador)
         {
             if (!IsServer) return;
+
+            MatchInformationManager matchInfo = Object.FindFirstObjectByType<MatchInformationManager>();
+            if (matchInfo != null)
+            {
+                matchInfo.BloquearDescuentoDeVida();
+            }
+            else
+            {
+                Debug.LogWarning("[GlobalGameStateManager] No se encontró la instancia de MatchInformationManager en la escena para bloquear el daño.");
+            }
 
             Debug.Log($"<color=red>[GameState] -> Fin de Ronda. Solicitando cartel de fin con texto: {textoGanador}.</color>");
             
