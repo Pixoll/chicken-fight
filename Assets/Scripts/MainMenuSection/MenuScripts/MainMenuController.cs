@@ -13,8 +13,6 @@ namespace MainMenuSection.MenuScripts {
         [SerializeField] private GameObject playCreateRoomSection;
         [SerializeField] private GameObject playJoinRoomSection;
         [SerializeField] private GameObject howToPlaySection;
-        [SerializeField] private GameObject preferencesSection;
-        [SerializeField] private GameObject statsSection;
         [SerializeField] private GameObject creditsSection;
         [SerializeField] private GameObject quitConfirmationSection;
 
@@ -40,8 +38,6 @@ namespace MainMenuSection.MenuScripts {
                 mainSection,
                 playSection,
                 howToPlaySection,
-                preferencesSection,
-                statsSection,
                 creditsSection,
             };
 
@@ -67,14 +63,6 @@ namespace MainMenuSection.MenuScripts {
 
         public void OpenHowToPlaySection() {
             ActivatePrimarySection(howToPlaySection);
-        }
-
-        public void OpenPreferencesSection() {
-            ActivatePrimarySection(preferencesSection);
-        }
-
-        public void OpenStatsSection() {
-            ActivatePrimarySection(statsSection);
         }
 
         public void OpenCreditsSection() {
