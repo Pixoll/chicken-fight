@@ -4,6 +4,8 @@ using System.Collections.Generic;
 namespace DataPersistence.Data {
     [Serializable]
     public class GameData {
+        private const string DefaultUsername = "Player";
+
         public string username;
         public List<Game> games;
 
@@ -11,8 +13,10 @@ namespace DataPersistence.Data {
             ApplyDefaults();
         }
 
+        public bool HasDefaultUsername => username == DefaultUsername;
+
         public void ApplyDefaults() {
-            username ??= "Player";
+            username ??= DefaultUsername;
             games ??= new List<Game>();
         }
     }

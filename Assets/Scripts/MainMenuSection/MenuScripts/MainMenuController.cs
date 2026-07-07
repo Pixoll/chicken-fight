@@ -27,6 +27,8 @@ namespace MainMenuSection.MenuScripts {
         private GameObject player2PlaceholderImage;
 
         [SerializeField] private GameObject player2Image;
+        [SerializeField] private GameObject player2EditUsernameButton;
+        [SerializeField] private GameObject player1EditUsernameButton;
         [SerializeField] private GameObject fightButton;
         [SerializeField] private GameObject waitingHostText;
 
@@ -103,9 +105,6 @@ namespace MainMenuSection.MenuScripts {
                 string generatedCode = GameplayNetworkManager.GetCurrentHostCode();
 
                 hostCodeText.text = generatedCode;
-                player2PlaceholderImage.SetActive(true);
-                player2Image.SetActive(false);
-                fightButton.SetActive(false);
 
                 GameplayNetworkManager.Instance.OnPlayerJoined += OnPlayerJoined;
                 GameplayNetworkManager.Instance.OnPlayerLeft += OnPlayerLeft;
@@ -116,6 +115,8 @@ namespace MainMenuSection.MenuScripts {
             player2Image.SetActive(false);
             fightButton.SetActive(false);
             waitingHostText.SetActive(false);
+            player1EditUsernameButton.SetActive(true);
+            player2EditUsernameButton.SetActive(false);
         }
 
         public void OpenPlayJoinRoomMenu() {
@@ -147,6 +148,8 @@ namespace MainMenuSection.MenuScripts {
             player2Image.SetActive(true);
             fightButton.SetActive(true);
             waitingHostText.SetActive(false);
+            player1EditUsernameButton.SetActive(true);
+            player2EditUsernameButton.SetActive(false);
         }
 
         private void OnPlayerLeft() {
@@ -160,13 +163,19 @@ namespace MainMenuSection.MenuScripts {
             player2Image.SetActive(false);
             fightButton.SetActive(false);
             waitingHostText.SetActive(false);
+            player1EditUsernameButton.SetActive(true);
+            player2EditUsernameButton.SetActive(false);
         }
 
         private void OnJoinedRoom() {
-            OpenPlayCreateRoomMenu();
+            hostCodeText.text = joinCodeInputField.text.ToUpper();
+            ActivateSecondaryPlaySection(playCreateRoomSection);
             player2PlaceholderImage.SetActive(false);
             player2Image.SetActive(true);
+            fightButton.SetActive(false);
             waitingHostText.SetActive(true);
+            player1EditUsernameButton.SetActive(false);
+            player2EditUsernameButton.SetActive(true);
         }
 
         private void OnHostLeft() {
