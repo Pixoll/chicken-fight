@@ -17,6 +17,11 @@ namespace MainMenuSection {
         public bool IsPlayer1 { get; private set; }
         public bool IsPlayer2 => !IsPlayer1;
 
+        [NonSerialized] public string player1Username;
+        [NonSerialized] public string player2Username;
+
+        public string CurrentPlayerUsername => IsPlayer1 ? player1Username : player2Username;
+
         private void Awake() {
             if (Instance != null && Instance != this) {
                 Destroy(gameObject);
@@ -137,7 +142,7 @@ namespace MainMenuSection {
 
             _transport.SetConnectionData(targetIp, 7777);
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnServerShutdown; 
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnServerShutdown;
             IsPlayer1 = false;
 
             NetworkManager.Singleton.StartClient();

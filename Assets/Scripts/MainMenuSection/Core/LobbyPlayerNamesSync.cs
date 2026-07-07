@@ -27,19 +27,26 @@ namespace MainMenuSection.Core {
 
         public override void OnNetworkSpawn() {
             _player1Name.OnValueChanged += (_, newValue) => {
-                player1NameText.text = newValue.ToString();
-                player1NameInput.text = newValue.ToString();
+                string value = newValue.ToString();
+                player1NameText.text = value;
+                player1NameInput.text = value;
+                GameplayNetworkManager.Instance.player1Username = value;
             };
 
             _player2Name.OnValueChanged += (_, newValue) => {
-                player2NameText.text = newValue.ToString();
-                player2NameInput.text = newValue.ToString();
+                string value = newValue.ToString();
+                player2NameText.text = value;
+                player2NameInput.text = value;
+                GameplayNetworkManager.Instance.player2Username = value;
             };
 
-            player1NameText.text = _player1Name.Value.ToString();
-            player2NameText.text = _player2Name.Value.ToString();
-            player1NameInput.text = _player1Name.Value.ToString();
-            player2NameInput.text = _player2Name.Value.ToString();
+            string p1Name = _player1Name.Value.ToString();
+            string p2Name = _player2Name.Value.ToString();
+
+            player1NameText.text = p1Name;
+            player2NameText.text = p2Name;
+            player1NameInput.text = p1Name;
+            player2NameInput.text = p2Name;
 
             if (IsClient && !string.IsNullOrEmpty(_localUsername)) {
                 SubmitUsernameServerRpc(_localUsername, NetworkManager.Singleton.LocalClientId);
