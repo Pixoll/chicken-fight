@@ -571,7 +571,7 @@ namespace Cainos.InteractivePixelWater
             if ( dragEnabled)
             {
                 //linear drag
-                Vector2 velocity = rb.velocity;
+                Vector2 velocity = rb.linearVelocity;
                 if (velocity.sqrMagnitude > 0.0001f)
                 {
                     Vector2 dragForce = -dragLinear * velocity;
@@ -618,7 +618,7 @@ namespace Cainos.InteractivePixelWater
             Bounds bounds = collider.bounds;
             Vector2 pos = bounds.center;
             float size = bounds.size.x;
-            Vector2 vel = rb ? rb.velocity : Vector2.zero;
+            Vector2 vel = rb ? rb.linearVelocity : Vector2.zero;
 
             //check if vertical range of the collider overlap with the surface of the water
             //to prevent generating splash for objects appear underwater
@@ -728,19 +728,19 @@ namespace Cainos.InteractivePixelWater
             if (depthDecay < 0.01f) return;
 
             //vertical
-            float vel = rb.velocity.y * waveInfluenceMul.y * mulY * depthDecay;
+            float vel = rb.linearVelocity.y * waveInfluenceMul.y * mulY * depthDecay;
             float radius = collider.bounds.extents.x;
             Vector2 center = collider.bounds.center;
             AddWave(center, radius, vel);
 
             //left
-            vel = -rb.velocity.x * waveInfluenceMul.x * mulX * depthDecay;
+            vel = -rb.linearVelocity.x * waveInfluenceMul.x * mulX * depthDecay;
             radius = 0.2f;
             center = collider.bounds.center - new Vector3(collider.bounds.extents.x, 0.0f, 0.0f);
             AddWave(center, radius, vel);
 
             //right
-            vel = rb.velocity.x * waveInfluenceMul.x * mulX * depthDecay;
+            vel = rb.linearVelocity.x * waveInfluenceMul.x * mulX * depthDecay;
             radius = 0.2f;
             center = collider.bounds.center + new Vector3(collider.bounds.extents.x, 0.0f, 0.0f);
             AddWave(center, radius, vel);
