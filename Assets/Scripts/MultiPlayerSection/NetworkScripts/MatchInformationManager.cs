@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using MainMenuSection;
 using MultiPlayerSection.GameplayScripts;
 using MultiPlayerSection.GameplayScripts.Objects;
 using MultiPlayerSection.HUDScripts;
@@ -123,7 +124,7 @@ namespace MultiPlayerSection.NetworkScripts
             }
         }
 
-        public void FuncionFinRonda(string nombreGanadorRound)
+        public void FuncionFinRonda(string nombreGanadorRound, string nombreGanadorReal)
         {
             if (!IsServer) return;
 
@@ -133,7 +134,7 @@ namespace MultiPlayerSection.NetworkScripts
 
             if (GlobalGameStateManager.Instance != null)
             {
-                GlobalGameStateManager.Instance.FinDeRondaServer($"GANADOR {nombreGanadorRound}");
+                GlobalGameStateManager.Instance.FinDeRondaServer($"GANADOR {nombreGanadorReal}");
             }
 
             foreach (var cliente in NetworkManager.Singleton.ConnectedClientsList)
@@ -162,13 +163,13 @@ namespace MultiPlayerSection.NetworkScripts
             VidasPerdidasJugador0 = _vidasPerdidasPorCliente.ContainsKey(0) ? _vidasPerdidasPorCliente[0] : 0;
             VidasPerdidasJugador1 = _vidasPerdidasPorCliente.ContainsKey(1) ? _vidasPerdidasPorCliente[1] : 0;
 
-            string nombreJ0 = "Jugador 0";
-            string nombreJ1 = "Jugador 1";
+            string nombreJ0 = GameplayNetworkManager.Instance.player1Username;
+            string nombreJ1 = GameplayNetworkManager.Instance.player2Username;
 
             for (int i = 0; i < _listaJugadores.Count; i++)
             {
-                if (_listaJugadores[i].nombreJugador.ToString() == "0") nombreJ0 = "Jugador 0";
-                else if (_listaJugadores[i].nombreJugador.ToString() == "1") nombreJ1 = "Jugador 1";
+                if (_listaJugadores[i].nombreJugador.ToString() == "0") nombreJ0 = GameplayNetworkManager.Instance.player1Username;
+                else if (_listaJugadores[i].nombreJugador.ToString() == "1") nombreJ1 = GameplayNetworkManager.Instance.player2Username;
                 else
                 {
                     if (i == 0) nombreJ0 = _listaJugadores[i].nombreJugador.ToString();
@@ -177,8 +178,8 @@ namespace MultiPlayerSection.NetworkScripts
             }
 
             string ganadorFormateado = nombreGanadorFinal;
-            if (nombreGanadorFinal == "0") ganadorFormateado = "Jugador 0";
-            if (nombreGanadorFinal == "1") ganadorFormateado = "Jugador 1";
+            if (nombreGanadorFinal == "0") ganadorFormateado = GameplayNetworkManager.Instance.player1Username;
+            if (nombreGanadorFinal == "1") ganadorFormateado = GameplayNetworkManager.Instance.player2Username;
 
             IDJugadorGanador = ganadorFormateado;
             _partidaFinalizadaGlobal.Value = true;
@@ -331,7 +332,11 @@ namespace MultiPlayerSection.NetworkScripts
 
                 Debug.Log($"<color=red>[Match] -> ¡Muerte detectada! Jugador {nombreUnico} cae a 0 HP (Vidas perdidas en total: {_vidasPerdidasPorCliente[idPerdedor]}). Ganador del Round: {nombreGanador}. Saltando a FaseFinRonda.</color>");
 
-                FuncionFinRonda(nombreGanador);
+                string nombreGanadorReal = nombreGanador == "0" 
+                    ? GameplayNetworkManager.Instance.player1Username
+                    : GameplayNetworkManager.Instance.player2Username;
+                
+                FuncionFinRonda(nombreGanador, nombreGanadorReal);
             }
         }
 
