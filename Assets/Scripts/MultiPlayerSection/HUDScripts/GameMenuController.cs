@@ -1,4 +1,6 @@
+using MainMenuSection.Core;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace MultiPlayerSection.HUDScripts {
     public class GameMenuController : MonoBehaviour {
@@ -7,6 +9,12 @@ namespace MultiPlayerSection.HUDScripts {
         [SerializeField] private GameObject gameHudUiCanvas;
         [SerializeField] private GameObject pauseUiCanvas;
         [SerializeField] private GameObject overviewUiCanvas;
+        [SerializeField] private GameObject playerLeftWarning;
+
+        private void Start() {
+            GameplayNetworkManager.Instance.OnPlayerLeft += DisplayOtherPlayerLeftWarning;
+            GameplayNetworkManager.Instance.OnHostLeft += DisplayOtherPlayerLeftWarning;
+        }
 
         public void OpenPauseMenu() {
             pauseSection.SetActive(true);
@@ -27,9 +35,21 @@ namespace MultiPlayerSection.HUDScripts {
         }
 
         public void DisplayOverview() {
+            GameplayNetworkManager.Instance.OnPlayerLeft -= DisplayOtherPlayerLeftWarning;
+            GameplayNetworkManager.Instance.OnHostLeft -= DisplayOtherPlayerLeftWarning;
             gameHudUiCanvas.SetActive(false);
             pauseUiCanvas.SetActive(false);
             overviewUiCanvas.SetActive(true);
+        }
+
+        public void ExitMatch() {
+            GameplayNetworkManager.Instance.ClearEventListeners();
+            GameplayNetworkManager.Instance.CloseConnection();
+            SceneManager.LoadScene("MainMenu");
+        }
+
+        private void DisplayOtherPlayerLeftWarning() {
+            playerLeftWarning.SetActive(true);
         }
     }
 }

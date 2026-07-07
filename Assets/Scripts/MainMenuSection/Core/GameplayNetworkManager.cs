@@ -6,9 +6,8 @@ using System.Net.Sockets;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
-namespace MainMenuSection {
+namespace MainMenuSection.Core {
     public class GameplayNetworkManager : MonoBehaviour {
         public static GameplayNetworkManager Instance { get; private set; }
 
@@ -59,7 +58,7 @@ namespace MainMenuSection {
         }
 
         public void CloseConnection() {
-            if (NetworkManager.Singleton == null) return;
+            if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening) return;
 
             Debug.Log("<color=red>[GameplayNetworkManager] Cerrando conexión y apagando instancias de red.</color>");
 
@@ -147,6 +146,13 @@ namespace MainMenuSection {
         public Action OnPlayerLeft;
         public Action OnHostLeft;
         public Action OnJoinedRoom;
+
+        public void ClearEventListeners() {
+            OnPlayerJoined = null;
+            OnPlayerLeft = null;
+            OnHostLeft = null;
+            OnJoinedRoom = null;
+        }
 
         private void OnHostStartedLocal() {
             // Desuscribimos inmediatamente para evitar ejecuciones repetidas involuntarias
