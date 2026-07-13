@@ -116,7 +116,7 @@ namespace MultiPlayerSection.NetworkScripts
 
             EjecutarRespawnerSeguro();
 
-            yield return new WaitForSeconds(2.8f);
+            yield return new WaitForSeconds(1f);
 
             if (GlobalGameStateManager.Instance != null)
             {
