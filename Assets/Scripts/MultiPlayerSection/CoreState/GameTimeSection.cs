@@ -46,7 +46,7 @@ namespace MultiPlayerSection.CoreState
 
             if (_audioSource != null)
             {
-                _audioSource.Stop();
+                StartCoroutine(AudioPlayer.Stop(_audioSource, 0.5f));
             }
 
             foreach (var kvp in _instanciasClonadas)
@@ -130,9 +130,8 @@ namespace MultiPlayerSection.CoreState
 
             if (activar)
             {
-                if (elemento.sonidoAlAparecer != null && _audioSource != null)
-                {
-                    _audioSource.PlayOneShot(elemento.sonidoAlAparecer, elemento.volumenSonido);
+                if (elemento.sonidoAlAparecer != null && _audioSource != null) {
+                    StartCoroutine(AudioPlayer.PlayClip(_audioSource, elemento.sonidoAlAparecer, elemento.volumenSonido, 0.5f));
                     Debug.Log($"<color=cyan>[Timeline Audio] -> Reproduciendo track/efecto: '{elemento.sonidoAlAparecer.name}' al segundo: {_tiempoRestante:F2}</color>");
                 }
 

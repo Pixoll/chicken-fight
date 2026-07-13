@@ -14,6 +14,13 @@ namespace MultiPlayerSection.HUDScripts
         [Tooltip("Tiempo en segundos para cambiar entre cada punto")]
         [SerializeField] private float velocidadAnimacion = 0.5f;
 
+        [Header("Configuración del Sonido Único")]
+        [SerializeField] private AudioSource sonidoDeInicio;
+        [Range(0f, 1f)] [SerializeField] private float volumenSonido = 1f;
+        [SerializeField] private float tiempoEspera = 1f;
+
+        private static bool _playedSound;
+
         private TextMeshProUGUI _textMeshPro;
         private Coroutine _rutinaAnimacion;
 
@@ -25,6 +32,8 @@ namespace MultiPlayerSection.HUDScripts
         private void OnEnable()
         {
             _rutinaAnimacion = StartCoroutine(RutinaPuntosSuspensivos());
+
+            StartCoroutine(RutinaSonido());
         }
 
         private void OnDisable()
@@ -69,6 +78,15 @@ namespace MultiPlayerSection.HUDScripts
 
                 yield return new WaitForSeconds(velocidadAnimacion);
             }
+        }
+
+        private IEnumerator RutinaSonido() {
+            if (_playedSound || sonidoDeInicio == null) yield break;
+
+            yield return new WaitForSeconds(velocidadAnimacion);
+
+            StartCoroutine(AudioPlayer.Play(sonidoDeInicio, volumenSonido, 0.1f));
+            _playedSound = true;
         }
 
         public void CambiarTextoBase(string nuevoTexto)

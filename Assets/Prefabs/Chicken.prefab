@@ -302,7 +302,7 @@ MonoBehaviour:
   punchCooldown: 1
   hitboxDuration: 0.5
   sonidoGolpe: {fileID: 8300000, guid: 4e4ec4cfee219a9e1a97bb09dd76d2ac, type: 3}
-  volumenGolpe: 0.804
+  volumenGolpe: 0.25
 --- !u!114 &6378312355422994842
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -935,7 +935,7 @@ MonoBehaviour:
   multiplicadorCaida: 3
   groundCheckCollider: {fileID: 3956110878493804506}
   sonidoSalto: {fileID: 8300000, guid: f0d6821d814df6fe68ffb80bf4906cab, type: 3}
-  volumenSalto: 0.7
+  volumenSalto: 0.25
 --- !u!114 &9211801158720280368
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -951,10 +951,10 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   moveSpeed: 8
   sonidoPasoCarrera: {fileID: 8300000, guid: b3238a7b24fedcfa682a9761eb5cac4f, type: 3}
-  volumenPasos: 0.5
+  volumenPasos: 0.25
   intervaloEntrePasos: 0.25
   sonidoStun: {fileID: 8300000, guid: eefbb11bd47b843e1aaab1b6ac192708, type: 3}
-  volumenStun: 0.8
+  volumenStun: 0.25
 --- !u!82 &1944781617409484611
 AudioSource:
   m_ObjectHideFlags: 0
